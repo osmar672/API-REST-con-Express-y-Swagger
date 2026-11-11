@@ -83,7 +83,7 @@ test('buscar(id) entrega copias y lanza AppError 404 para la integración con B'
 
 test('no interpreta representaciones ambiguas de id como notas existentes', async () => {
   const nota = await (await post({ titulo: 'Identificador', contenido: 'Texto' })).json();
-  for (const id of [`0${nota.id}`, `${nota.id}.0`, `${nota.id}e0`, `0x${nota.id.toString(16)}`, '9007199254740992']) {
+  for (const id of [`0${nota.id}`, `${nota.id}.0`, `${nota.id}e0`, `0x${nota.id.toString(16)}`, '2147483648', '9999999999999', '9007199254740992']) {
     for (const method of ['GET', 'DELETE']) {
       assert.equal((await fetch(`${base}/api/notas/${id}`, { method })).status, 404);
     }

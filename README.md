@@ -58,7 +58,7 @@ Las tarifas quedan vacías por defecto: no se inventa un precio. Si existen cons
 | GET | `/api/ia/consumo?fecha=YYYY-MM-DD` | Consumo y estimación del día UTC; por defecto hoy UTC |
 | GET | `/api-docs` | Swagger UI con contratos y códigos de error |
 
-Zod valida antes de llamar al SDK: preguntas de 3–2000 caracteres, título de 1–100 y contenido de 1–5000. Se recortan espacios extremos y descartan propiedades desconocidas. IDs de notas: enteros positivos decimales seguros, sin ceros iniciales ni notación científica. Los IDs inválidos o inexistentes responden 404.
+Zod valida antes de llamar al SDK: preguntas de 3–2000 caracteres, título de 1–100 y contenido de 1–5000. Se recortan espacios extremos y descartan propiedades desconocidas. IDs de notas: enteros de 1 a 2147483647 (rango Int de Prisma), sin ceros iniciales ni notación científica. Los IDs inválidos o inexistentes responden 404.
 
 Errores: 400 con detalles de validación o JSON inválido; 404 para recurso inexistente; 409 para conversación ocupada o límite de turnos; 413 para cuerpo excesivo; 429 para límite local/proveedor; errores Claude 400/401 se traducen a 502 y 529 a 503 con `IA_NO_DISPONIBLE`. Las respuestas no exponen detalles internos del proveedor.
 

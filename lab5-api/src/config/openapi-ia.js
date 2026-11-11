@@ -31,6 +31,6 @@ module.exports = {
       parameters: [id], requestBody: pregunta, responses: { ...responses, 200: { description: 'Stream SSE', content: { 'text/event-stream': { schema: { type: 'string' }, example: 'event: texto\ndata: {"texto":"Hola"}\n\nevent: fin\ndata: {"uso":{"input_tokens":8,"output_tokens":2}}\n\n' } } } },
     }) },
     '/api/ia/consumo': { get: operation('Consulta consumo y costo estimado diario (UTC)', { parameters: [{ name: 'fecha', in: 'query', schema: { type: 'string', format: 'date' }, description: 'YYYY-MM-DD; por defecto hoy UTC. Sin tarifas: costoEstimadoUsd es null.' }], responses: { 200: success(ref('ConsumoDiario')), 400: responses[400], 429: responses[429] } }) },
-    '/api/notas/{id}/resumen': { post: operation('Resume una nota en tres viñetas', { parameters: [{ ...id, schema: { type: 'integer', minimum: 1 } }], responses: { ...responses, 200: success({ type: 'object', properties: { notaId: { type: 'integer' }, resumen: { type: 'string' }, uso: { type: 'object' } } }) } }) },
+    '/api/notas/{id}/resumen': { post: operation('Resume una nota en tres viñetas', { parameters: [{ ...id, schema: { type: 'integer', minimum: 1, maximum: 2147483647 } }], responses: { ...responses, 200: success({ type: 'object', properties: { notaId: { type: 'integer' }, resumen: { type: 'string' }, uso: { type: 'object' } } }) } }) },
   },
 };

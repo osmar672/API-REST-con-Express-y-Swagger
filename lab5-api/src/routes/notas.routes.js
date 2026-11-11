@@ -7,7 +7,7 @@ const { AppError } = require('../utils/errors');
 
 // Evita que valores como 1e0, 0x1 o 1.0 se interpreten como el id 1.
 router.param('id', (req, res, next, value) => {
-  if (!/^[1-9]\d*$/.test(value) || !Number.isSafeInteger(Number(value))) {
+  if (!/^[1-9]\d*$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) > 2147483647) {
     return next(new AppError(404, 'Nota no encontrada'));
   }
   next();

@@ -1,5 +1,5 @@
 {
-  "node": "v24.22.1",
+  "node": "v20.20.2",
   "command": "npm run dev",
   "initialCreateStatus": 201,
   "restartObserved": true,

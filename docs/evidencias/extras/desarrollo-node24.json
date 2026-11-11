@@ -1,0 +1,14 @@
+{
+  "node": "v24.22.1",
+  "command": "npm run dev",
+  "initialCreateStatus": 201,
+  "restartObserved": true,
+  "notesAfterRestart": [
+    {
+      "id": 1,
+      "titulo": "Prueba de recarga",
+      "contenido": "Se conserva al reiniciar."
+    }
+  ],
+  "swaggerAfterRestartStatus": 200
+}

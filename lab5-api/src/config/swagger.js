@@ -26,14 +26,14 @@ module.exports = swaggerJsdoc({
         Nota: {
           allOf: [
             { $ref: '#/components/schemas/NotaEntrada' },
-            { type: 'object', required: ['id'], properties: { id: { type: 'integer', minimum: 1 } } },
+            { type: 'object', required: ['id'], properties: { id: { type: 'integer', minimum: 1, maximum: 2147483647 } } },
           ],
         },
         Error: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
         ErrorValidacion: { type: 'object', properties: { errores: { type: 'array', items: { type: 'object' } } }, required: ['errores'] },
       },
       parameters: {
-        NotaId: { name: 'id', in: 'path', required: true, schema: { type: 'integer', minimum: 1 }, description: 'Identificador de la nota' },
+        NotaId: { name: 'id', in: 'path', required: true, schema: { type: 'integer', minimum: 1, maximum: 2147483647 }, description: 'Identificador de la nota' },
       },
       responses: {
         DatosInvalidos: {
