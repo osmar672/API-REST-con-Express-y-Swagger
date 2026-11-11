@@ -44,5 +44,6 @@ module.exports = swaggerJsdoc({
       },
     },
   },
-  apis: [path.join(__dirname, '../routes/*.js')],
+  // swagger-jsdoc usa patrones glob: en Windows hay que convertir \ en /.
+  apis: [path.join(__dirname, '../routes/*.js').replace(/\\/g, '/')],
 });
