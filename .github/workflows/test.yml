@@ -2,7 +2,7 @@ name: Pruebas de la API de notas
 
 on:
   push:
-    branches: [main, feature/notas]
+    branches: [main, feature/notas, feature/ia]
   pull_request:
     branches: [main]
 
