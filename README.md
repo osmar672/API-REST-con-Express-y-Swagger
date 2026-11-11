@@ -22,13 +22,13 @@ Swagger UI está en `http://localhost:3000/api-docs` (o el puerto configurado).
 El código está en `lab5-api/src`; los scripts se ejecutan desde la raíz, donde están los manifiestos existentes.
 Las notas se guardan en memoria: reiniciar el proceso elimina los datos.
 
-**Estado heredado:** el repositorio original versiona `node_modules`. No se han eliminado esos archivos en esta rama para evitar una eliminación masiva ajena al CRUD. `npm ci` puede modificar archivos versionados de esa carpeta; no incluirlos en commits. `.gitignore` impide añadir nuevas dependencias, pero no deja de rastrear las existentes. El equipo debería acordar su retirada del índice en una tarea de limpieza.
+`node_modules` está excluido de Git. Las dependencias se instalan con `npm ci`; no se suben a la rama.
 
 ## Variables de entorno
 
 | Variable | Uso |
 | --- | --- |
-| `PORT` | Puerto del servidor; por defecto 3000 |
+| `PORT` | Puerto del servidor; por defecto 3000; entero entre 0 y 65535 (0 elige un puerto libre) |
 | `ANTHROPIC_API_KEY` | Credencial local para la futura integración de B; no requerida por el CRUD |
 | `CLAUDE_MODEL` | Modelo para la futura integración de B |
 
@@ -40,7 +40,7 @@ Las notas se guardan en memoria: reiniciar el proceso elimina los datos.
 | --- | --- | --- |
 | GET | `/api/notas` | 200, arreglo de notas |
 | GET | `/api/notas/:id` | 200 con nota; 404 si no existe |
-| POST | `/api/notas` | 201 con nota creada; 400 si los datos son inválidos |
+| POST | `/api/notas` | 201 con nota creada y cabecera `Location`; 400 si los datos son inválidos |
 | DELETE | `/api/notas/:id` | 204 sin cuerpo; 404 si no existe |
 | GET | `/api-docs` | Documentación interactiva Swagger UI |
 
@@ -55,6 +55,8 @@ curl -i http://localhost:3000/api/notas/1
 curl -i -X DELETE http://localhost:3000/api/notas/1
 ```
 
+Los IDs de ruta deben ser enteros positivos escritos en decimal, sin ceros iniciales ni notación científica; los demás devuelven 404.
+
 `titulo`: entre 1 y 100 caracteres; `contenido`: entre 1 y 5000. Se recortan espacios extremos y se descartan propiedades desconocidas. Cuerpo inválido: `{ "errores": [...] }`; nota inexistente: `{ "error": "Nota no encontrada" }`. JSON mal formado devuelve 400; cuerpo excesivo, 413; errores internos, 500 sin detalles sensibles.
 
 ## Integración con el integrante B
@@ -67,7 +69,7 @@ Swagger usa rutas absolutas de archivos para funcionar independientemente del di
 
 ## Verificación
 
-`npm test` ejecuta seis pruebas con `node:test` y peticiones HTTP reales, sin servicios externos ni consumo de créditos:
+`npm test` ejecuta 18 pruebas con `node:test` y peticiones HTTP reales, sin servicios externos ni consumo de créditos:
 
 1. Crear dos notas, listar, consultar, eliminar y comprobar IDs crecientes.
 2. Validación de campos, tipos, espacios y límites.
@@ -76,7 +78,15 @@ Swagger usa rutas absolutas de archivos para funcionar independientemente del di
 5. Swagger UI y validación de la especificación OpenAPI.
 6. Contrato `buscar(id)` y protección contra mutaciones externas.
 
-Resultado durante la implementación: **6 aprobadas, 0 fallidas**.
+Además cubre IDs ambiguos, cabecera `Location`, cuerpo excesivo, aislamiento de notas, errores internos, arranque desde otro directorio, valores inválidos de `PORT`, puerto ocupado y apagado con SIGTERM.
+
+Resultado de la revisión: **18 aprobadas, 0 fallidas** en Node.js 24. También se agregó un flujo de GitHub Actions para ejecutar `npm ci` y `npm test` en Node.js 20 y 24 con cada push a esta rama o pull request hacia `main`; su resultado remoto debe consultarse en la pestaña Actions.
+
+La prueba adicional `npm run test:browser` interactúa con Swagger UI desde Chromium. Para preparar el navegador: `npx playwright install chromium`. Si ya está instalado en Linux: `CHROMIUM_PATH=/usr/bin/chromium npm run test:browser`. Guarda seis capturas reales en [`docs/evidencias`](docs/evidencias) y un registro de resultados. Ver el [informe de revisión](docs/REVISION_PERSONA_1.md).
+
+![Creación de una nota desde Swagger UI](docs/evidencias/01-crear-nota.png)
+
+![Validación de campos desde Swagger UI](docs/evidencias/04-validacion-zod.png)
 
 Pruebas manuales de pareja: B debe repetir el CRUD desde Swagger UI. A deberá probar pregunta libre, resumen, nota inexistente, pregunta de una letra y credencial inválida cuando B entregue su integración. Las capturas marcadas con estrella en la guía corresponden a IA: están pendientes, no se han realizado llamadas ni inventado evidencias. Guardar capturas reales sin claves en `docs/` cuando sea posible.
 

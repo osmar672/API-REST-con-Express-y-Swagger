@@ -9,7 +9,8 @@
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "playwright": "^1.62.1"
   },
   "name": "lab5-notas-api",
   "version": "1.0.0",
@@ -17,7 +18,8 @@
   "scripts": {
     "start": "node lab5-api/src/index.js",
     "dev": "nodemon lab5-api/src/index.js",
-    "test": "node --test lab5-api/test/*.test.js"
+    "test": "node --test lab5-api/test/*.test.js",
+    "test:browser": "node scripts/verificar-swagger.js"
   },
   "engines": {
     "node": ">=20"
