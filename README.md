@@ -29,8 +29,13 @@ Las notas se guardan en memoria: reiniciar el proceso elimina los datos.
 | Variable | Uso |
 | --- | --- |
 | `PORT` | Puerto del servidor; por defecto 3000; entero entre 0 y 65535 (0 elige un puerto libre) |
-| `ANTHROPIC_API_KEY` | Clave privada de la Claude API; solo la lee `claude.service.js`. Sin ella el CRUD y Swagger funcionan y la IA responde 502 |
+| `LLM_PROVIDER` | Proveedor de IA: `groq` o `claude` (por defecto `claude`) |
+| `GROQ_API_KEY` | Clave privada de Groq; se usa si `LLM_PROVIDER=groq` |
+| `GROQ_MODEL` | Modelo de Groq (por defecto `llama-3.3-70b-versatile`) |
+| `ANTHROPIC_API_KEY` | Clave privada de la Claude API; se usa si `LLM_PROVIDER=claude` |
 | `CLAUDE_MODEL` | Modelo usado por `messages.create` (por defecto `claude-haiku-4-5-20251001`) |
+
+Las claves solo las lee `claude.service.js`. Sin la clave del proveedor elegido, el CRUD y Swagger funcionan y la IA responde 502.
 
 `.env.example` no contiene credenciales. Crear `.env` localmente; nunca subirlo ni mostrar claves en capturas. Verificar `git status` antes de cada commit.
 
@@ -65,21 +70,24 @@ Los IDs de ruta deben ser enteros positivos escritos en decimal, sin ceros inici
 
 `src/services/notas.service.js` exporta `listar()`, `crear({ titulo, contenido })`, `buscar(id)` y `eliminar(id)`. `buscar` recibe un número, devuelve una copia de la nota o lanza `AppError(404, 'Nota no encontrada')`. B debe llamar `buscar(Number(req.params.id))` antes de contactar a Claude en la ruta de resumen.
 
-## Integración con Claude (integrante B)
+## Integración con IA: Groq o Claude (integrante B)
 
-- `src/services/claude.service.js` es el **único** módulo que importa `@anthropic-ai/sdk`. El cliente se crea en la primera pregunta válida (con `timeout` de 30 s y un reintento), de modo que el servidor arranca aunque falte la clave. Usa `messages.create` con `model` desde `CLAUDE_MODEL`, `max_tokens: 1024`, un `system` configurable y devuelve `{ respuesta, uso }`.
+- `src/services/claude.service.js` es el **único** módulo que habla con el modelo. `LLM_PROVIDER` en `.env` elige el proveedor sin tocar rutas:
+  - **groq**: SDK `openai` con `baseURL: https://api.groq.com/openai/v1` (Groq es compatible con OpenAI); usa `chat.completions.create` y el `system` va como primer mensaje.
+  - **claude**: `@anthropic-ai/sdk` con `messages.create` y el parámetro `system`.
+- En ambos casos: `max_tokens: 1024`, `timeout` de 30 s, un reintento, y la respuesta es `{ respuesta, uso: { input_tokens, output_tokens } }` (los `prompt_tokens`/`completion_tokens` de Groq se renombran). El cliente se crea en la primera pregunta válida, así el servidor arranca aunque falte la clave.
 - `src/routes/ia.routes.js` implementa `POST /api/ia/preguntar`. Zod exige una pregunta de 3 a 2000 caracteres (tras recortar espacios) **antes** de llamar a Claude.
 - `POST /api/notas/:id/resumen` (en `notas.routes.js`) llama primero a `notas.buscar(id)` de A: si la nota no existe responde 404 sin gastar créditos. Envía el contenido como mensaje y la instrucción «Resume el texto en 3 viñetas breves, en español.» como `system`.
 - `errorHandler.js` traduce los errores del SDK sin reenviar el mensaje del proveedor; en consola solo se registra estado y tipo:
 
-| Error de Claude | Respuesta de nuestra API |
+| Error del proveedor | Respuesta de nuestra API |
 | --- | --- |
 | 401, 400 u otro | 502 `{ "error": "IA_NO_DISPONIBLE" }` |
 | 429 | 429 `{ "error": "IA_NO_DISPONIBLE" }` |
-| 529 | 503 `{ "error": "IA_NO_DISPONIBLE" }` |
+| 529 (Claude) o 503 (Groq) | 503 `{ "error": "IA_NO_DISPONIBLE" }` |
 | Conexión o timeout | 502 `{ "error": "IA_NO_DISPONIBLE" }` |
 
-`lab5-api/test/ia.test.js` agrega 7 pruebas con `supertest` que simulan `claude.service`: no consumen créditos ni necesitan clave, y **no sustituyen** las capturas reales con ★.
+`lab5-api/test/ia.test.js` agrega 10 pruebas con `supertest` que simulan `claude.service`: no consumen créditos ni necesitan clave, y **no sustituyen** las capturas reales con ★.
 
 Swagger usa rutas absolutas de archivos para funcionar independientemente del directorio actual. La definición canónica está en `src/config/swagger.js`; `lab5-api/config/swagger.js` la reexporta para compatibilidad.
 
@@ -104,14 +112,14 @@ La prueba adicional `npm run test:browser` interactúa con Swagger UI desde Chro
 
 ![Validación de campos desde Swagger UI](docs/evidencias/04-validacion-zod.png)
 
-Pruebas manuales de pareja: B debe repetir el CRUD desde Swagger UI. A debe probar pregunta libre, resumen, nota inexistente, pregunta de una letra y credencial inválida (cambiar `ANTHROPIC_API_KEY` por un valor falso, reiniciar y preguntar: 502 `IA_NO_DISPONIBLE` y `Claude API: 401` en la consola). Las capturas con ★ requieren llamadas reales con clave: guardarlas sin claves en `docs/evidencias/`.
+Pruebas manuales de pareja: B debe repetir el CRUD desde Swagger UI. A debe probar pregunta libre, resumen, nota inexistente, pregunta de una letra y credencial inválida (cambiar `GROQ_API_KEY` por un valor falso, reiniciar y preguntar: 502 `IA_NO_DISPONIBLE` y `Groq API: 401` en la consola). Las capturas con ★ requieren llamadas reales con clave: guardarlas sin claves en `docs/evidencias/`.
 
 En Windows, la prueba de `servidor.test.js` que detiene el proceso con SIGTERM falla porque Windows no entrega esa señal al proceso; el resto pasa (24 de 25) y en Linux/CI pasan todas.
 
 ## Reflexión
 
 1. **¿Por qué la clave no puede estar en el frontend?** El usuario puede inspeccionar JavaScript, mapas de código y solicitudes en las herramientas del navegador. Una clave allí permitiría llamadas no autorizadas y gastos a cargo del propietario. Debe permanecer en el backend y fuera de Git.
-2. **¿Qué responder cuando Claude devuelve 401?** Nuestra API responde 502 con `{ "error": "IA_NO_DISPONIBLE" }` (implementado en `errorHandler.js` y cubierto por `ia.test.js`). El 401 significa que la clave **del servidor** fue rechazada por el proveedor, no que el cliente de nuestra API no esté autenticado; reenviarlo confundiría al cliente y podría filtrar detalles internos. El detalle queda solo en la consola del servidor.
+2. **¿Qué responder cuando Claude (o Groq) devuelve 401?** Nuestra API responde 502 con `{ "error": "IA_NO_DISPONIBLE" }` (implementado en `errorHandler.js` y cubierto por `ia.test.js`). El 401 significa que la clave **del servidor** fue rechazada por el proveedor, no que el cliente de nuestra API no esté autenticado; reenviarlo confundiría al cliente y podría filtrar detalles internos. El detalle queda solo en la consola del servidor.
 3. **`system` frente a `messages`:** `system` define el comportamiento (rol, idioma, formato); `messages` contiene lo que dice el usuario. En el resumen, `system` es «Resume el texto en 3 viñetas breves, en español.» y el mensaje es el contenido de la nota. Experimento real cambiando `system` a «Resume el texto en una frase»: **[completar con lo observado]**.
 4. **Tokens y costo:** `max_tokens` limita la salida; validar y limitar la pregunta a 2000 caracteres reduce la entrada. Valores reales (campo `uso` de la respuesta):
 
