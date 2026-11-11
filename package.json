@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
+    "@prisma/adapter-mariadb": "^7.10.1",
+    "@prisma/client": "^7.10.1",
     "dotenv": "^18.0.10",
     "express": "^5.3.0",
     "openai": "^7.55.0",
@@ -12,15 +14,21 @@
     "@apidevtools/swagger-parser": "^12.1.0",
     "nodemon": "^3.1.14",
     "playwright": "^1.62.1",
+    "prisma": "^7.10.1",
     "supertest": "^7.3.2"
   },
   "name": "lab5-notas-api",
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "postinstall": "prisma generate",
+    "prestart": "prisma migrate deploy",
     "start": "node lab5-api/src/index.js",
+    "predev": "prisma migrate deploy",
     "dev": "nodemon lab5-api/src/index.js",
-    "test": "node --test lab5-api/test/*.test.js",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "test": "node --test --import ./lab5-api/test/setup.mjs lab5-api/test/*.test.js",
     "test:browser": "node scripts/verificar-swagger.js",
     "test:dev": "node scripts/verificar-dev.js"
   },

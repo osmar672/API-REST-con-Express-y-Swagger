@@ -1,25 +1,32 @@
+const { PrismaClient } = require('@prisma/client');
+const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
 const { AppError } = require('../utils/errors');
+const { opcionesConexion } = require('../config/database');
 
-const notas = [];
-let nextId = 1;
-const listar = () => notas.map((nota) => ({ ...nota }));
+// Las notas se guardan en MySQL mediante Prisma (tabla "notas").
+const prisma = new PrismaClient({ adapter: new PrismaMariaDb(opcionesConexion()) });
+
+// Solo se devuelven estos campos: mantiene el contrato { id, titulo, contenido }.
+const campos = { id: true, titulo: true, contenido: true };
+// Int de Prisma es de 32 bits: un id mayor no puede existir.
+const ID_MAXIMO = 2147483647;
+
+const listar = () => prisma.nota.findMany({ select: campos, orderBy: { id: 'asc' } });
 
 // Contrato de integración con B: id numérico; nota o AppError 404.
-function buscar(id) {
-  const nota = notas.find((nota) => nota.id === id);
+async function buscar(id) {
+  const nota = Number.isInteger(id) && id >= 1 && id <= ID_MAXIMO
+    ? await prisma.nota.findUnique({ where: { id }, select: campos })
+    : null;
   if (!nota) throw new AppError(404, 'Nota no encontrada');
-  return { ...nota };
+  return nota;
 }
 
-function crear({ titulo, contenido }) {
-  const nota = { id: nextId++, titulo, contenido };
-  notas.push(nota);
-  return { ...nota };
+const crear = ({ titulo, contenido }) => prisma.nota.create({ data: { titulo, contenido }, select: campos });
+
+async function eliminar(id) {
+  await buscar(id);
+  await prisma.nota.delete({ where: { id } });
 }
 
-function eliminar(id) {
-  buscar(id);
-  notas.splice(notas.findIndex((nota) => nota.id === id), 1);
-}
-
-module.exports = { listar, buscar, crear, eliminar };
+module.exports = { listar, buscar, crear, eliminar, prisma };

@@ -4,3 +4,7 @@ node_modules/
 !.env.example
 coverage/
 *.log
+
+# Archivos de base de datos locales
+*.db
+*.db-journal

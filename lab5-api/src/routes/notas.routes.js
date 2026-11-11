@@ -33,7 +33,7 @@ const notaSchema = z.object({
  *               items:
  *                 $ref: '#/components/schemas/Nota'
  */
-router.get('/', (req, res) => res.json(notas.listar()));
+router.get('/', async (req, res) => res.json(await notas.listar()));
 
 /**
  * @openapi
@@ -64,8 +64,8 @@ router.get('/', (req, res) => res.json(notas.listar()));
  *       413:
  *         description: Cuerpo demasiado grande
  */
-router.post('/', validar(notaSchema), (req, res) => {
-  const nota = notas.crear(req.body);
+router.post('/', validar(notaSchema), async (req, res) => {
+  const nota = await notas.crear(req.body);
   res.location(`/api/notas/${nota.id}`).status(201).json(nota);
 });
 
@@ -87,7 +87,7 @@ router.post('/', validar(notaSchema), (req, res) => {
  *       404:
  *         $ref: '#/components/responses/NotaNoEncontrada'
  */
-router.get('/:id', (req, res) => res.json(notas.buscar(Number(req.params.id))));
+router.get('/:id', async (req, res) => res.json(await notas.buscar(Number(req.params.id))));
 
 /**
  * @openapi
@@ -103,8 +103,8 @@ router.get('/:id', (req, res) => res.json(notas.buscar(Number(req.params.id))));
  *       404:
  *         $ref: '#/components/responses/NotaNoEncontrada'
  */
-router.delete('/:id', (req, res) => {
-  notas.eliminar(Number(req.params.id));
+router.delete('/:id', async (req, res) => {
+  await notas.eliminar(Number(req.params.id));
   res.status(204).end();
 });
 
@@ -134,7 +134,7 @@ router.delete('/:id', (req, res) => {
  */
 router.post('/:id/resumen', async (req, res) => {
   // buscar() lanza 404 antes de llamar a Claude si la nota no existe.
-  const nota = notas.buscar(Number(req.params.id));
+  const nota = await notas.buscar(Number(req.params.id));
   const resultado = await claude.preguntar(
     nota.contenido,
     'Resume el texto en 3 viñetas breves, en español.'

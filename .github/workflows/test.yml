@@ -2,7 +2,7 @@ name: Pruebas de la API de notas
 
 on:
   push:
-    branches: [main, feature/notas, feature/ia]
+    branches: [main, feature/notas, feature/ia, feature/persistencia]
   pull_request:
     branches: [main]
 
@@ -18,6 +18,18 @@ jobs:
       fail-fast: false
       matrix:
         node: [20, 24]
+    # Servidor MySQL desechable solo para las pruebas (no es la base de nadie).
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      DATABASE_URL: mysql://root:ci@127.0.0.1:3306/lab5_notas
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

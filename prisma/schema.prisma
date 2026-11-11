@@ -1,0 +1,18 @@
+// Esquema de la base de datos MySQL (reto extra: persistencia con Prisma).
+// Después de cambiar este archivo: npm run db:migrate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Nota {
+  id        Int    @id @default(autoincrement())
+  titulo    String @db.VarChar(100)
+  contenido String @db.Text
+
+  @@map("notas")
+}
