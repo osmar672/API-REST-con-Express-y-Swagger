@@ -1,0 +1,54 @@
+
+> lab5-notas-api@1.0.0 test
+> node --test lab5-api/test/*.test.js
+
+✔ el manejador central conserva AppError y oculta detalles internos (64.323859ms)
+✔ Supertest: pregunta registra tokens y costo calculado con tarifas explícitas (146.632414ms)
+✔ Supertest: validación antes de Claude en preguntas, turnos y streaming (48.059163ms)
+✔ Supertest: envía el historial alternado y lo conserva entre instancias (67.678582ms)
+✔ Supertest: historial aislado, conversación inexistente y límite de diez turnos (188.132312ms)
+✔ Supertest: resumen busca la nota antes de llamar a Claude (29.071146ms)
+✔ Supertest: error Claude 400 se traduce a 502 sin filtrar detalles (20.308227ms)
+✔ Supertest: error Claude 401 se traduce a 502 sin filtrar detalles (35.011507ms)
+✔ Supertest: error Claude 429 se traduce a 429 sin filtrar detalles (20.857397ms)
+✔ Supertest: error Claude 529 se traduce a 503 sin filtrar detalles (16.476689ms)
+✔ Supertest: límite compartido protege preguntas y resúmenes, sin confiar en X-Forwarded-For (20.508642ms)
+✔ Supertest: texto SSE llega antes de terminar el proveedor y persiste al finalizar (39.908814ms)
+✔ Supertest: error tras emitir tokens produce evento SSE genérico y no guarda turno parcial (39.37506ms)
+✔ concurrencia: segundo turno obtiene 409 y un fallo libera la conversación (31.928725ms)
+✔ cancelar streaming no persiste un turno incompleto y libera el bloqueo (19.407627ms)
+✔ consumo diario respeta fronteras UTC y no inventa tarifas (27.403523ms)
+✔ SQLite conserva una nota después de desconectar y abrir otro cliente Prisma (21.628496ms)
+✔ servicio Claude usa el SDK oficial con historial, system y texto incremental (4.753169ms)
+✔ un uso inválido del proveedor revierte mensajes y consumo en la misma transacción (16.843651ms)
+✔ sin credencial el servicio falla antes de crear el cliente o contactar al proveedor (3.545705ms)
+✔ CRUD: crear dos notas, listar, buscar y eliminar sin reutilizar ids (156.882475ms)
+✔ Zod rechaza cuerpos vacíos, tipos incorrectos, blancos y longitudes excesivas (30.947977ms)
+✔ ids inexistentes o inválidos responden 404 uniforme (39.059815ms)
+✔ JSON mal formado y rutas desconocidas tienen errores controlados (3.316467ms)
+✔ Swagger UI sirve HTML y documenta las cuatro operaciones de notas (246.99682ms)
+✔ buscar(id) entrega copias y lanza AppError 404 para la integración con B (8.163724ms)
+✔ no interpreta representaciones ambiguas de id como notas existentes (17.13399ms)
+✔ crear publica Location y los errores de validación no alteran las notas (15.789204ms)
+✔ cuerpo excesivo devuelve 413 sin insertar datos (7.904322ms)
+✔ eliminar una nota conserva las demás y listar entrega copias (11.321187ms)
+✔ index arranca desde otro directorio, sirve Swagger y se detiene con SIGTERM (691.156549ms)
+✔ index rechaza PORT="abc" (393.149721ms)
+✔ index rechaza PORT="-1" (363.394389ms)
+✔ index rechaza PORT="65536" (413.23354ms)
+✔ index rechaza PORT="3.5" (389.35331ms)
+✔ index rechaza PORT="" (396.50224ms)
+✔ puerto ocupado produce salida fallida y error comprensible (698.70755ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4041.228301
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

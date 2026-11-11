@@ -1,5 +1,7 @@
 # Revisión del trabajo del integrante A
 
+> Documento de la fase original de A. Desde la integración de extras, el CRUD es asíncrono y persistente, y las rutas de IA están implementadas. Consultar [EXTRAS.md](EXTRAS.md) y el README para el estado actual; los resultados de la fase inicial son históricos.
+
 ## Alcance según la guía
 
 | Requisito de A | Implementación | Evidencia |

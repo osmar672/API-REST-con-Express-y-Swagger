@@ -1,5 +1,7 @@
 # Guía para explicar el trabajo de la persona A
 
+> Documento de la fase original de A. Desde la integración de extras, el CRUD es asíncrono y persistente, y las rutas de IA están implementadas. Consultar [EXTRAS.md](EXTRAS.md) y el README para el estado actual; los resultados de la fase inicial son históricos.
+
 Esta guía describe el código existente de `feature/notas`. Sirve para preparar la exposición; no reemplaza entender y ejecutar el proyecto. La integración de Claude pertenece a B y sigue pendiente.
 
 ## Presentación inicial (30 segundos)
