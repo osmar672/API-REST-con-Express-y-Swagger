@@ -58,7 +58,7 @@ module.exports = swaggerJsdoc({
           content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' }, example: { error: 'Nota no encontrada' } } },
         },
         IANoDisponible: {
-          description: 'Claude no disponible: 502 credencial/conexión/petición, 429 límite de peticiones, 503 saturado',
+          description: 'Proveedor de IA (Groq o Claude) no disponible: 502 credencial/conexión/petición, 429 límite de peticiones, 503 saturado',
           content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' }, example: { error: 'IA_NO_DISPONIBLE' } } },
         },
       },
