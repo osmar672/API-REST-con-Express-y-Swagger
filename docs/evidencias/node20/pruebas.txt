@@ -1,0 +1,109 @@
+
+> lab5-notas-api@1.0.0 test
+> node --test lab5-api/test/*.test.js
+
+TAP version 13
+# Subtest: el manejador central conserva AppError y oculta detalles internos
+ok 1 - el manejador central conserva AppError y oculta detalles internos
+  ---
+  duration_ms: 56.762283
+  ...
+# Subtest: CRUD: crear dos notas, listar, buscar y eliminar sin reutilizar ids
+ok 2 - CRUD: crear dos notas, listar, buscar y eliminar sin reutilizar ids
+  ---
+  duration_ms: 71.529851
+  ...
+# Subtest: Zod rechaza cuerpos vacíos, tipos incorrectos, blancos y longitudes excesivas
+ok 3 - Zod rechaza cuerpos vacíos, tipos incorrectos, blancos y longitudes excesivas
+  ---
+  duration_ms: 30.615584
+  ...
+# Subtest: ids inexistentes o inválidos responden 404 uniforme
+ok 4 - ids inexistentes o inválidos responden 404 uniforme
+  ---
+  duration_ms: 22.560789
+  ...
+# Subtest: JSON mal formado y rutas desconocidas tienen errores controlados
+ok 5 - JSON mal formado y rutas desconocidas tienen errores controlados
+  ---
+  duration_ms: 5.768827
+  ...
+# Subtest: Swagger UI sirve HTML y documenta las cuatro operaciones de notas
+ok 6 - Swagger UI sirve HTML y documenta las cuatro operaciones de notas
+  ---
+  duration_ms: 195.222389
+  ...
+# Subtest: buscar(id) entrega copias y lanza AppError 404 para la integración con B
+ok 7 - buscar(id) entrega copias y lanza AppError 404 para la integración con B
+  ---
+  duration_ms: 0.964105
+  ...
+# Subtest: no interpreta representaciones ambiguas de id como notas existentes
+ok 8 - no interpreta representaciones ambiguas de id como notas existentes
+  ---
+  duration_ms: 15.671134
+  ...
+# Subtest: crear publica Location y los errores de validación no alteran las notas
+ok 9 - crear publica Location y los errores de validación no alteran las notas
+  ---
+  duration_ms: 8.032053
+  ...
+# Subtest: cuerpo excesivo devuelve 413 sin insertar datos
+ok 10 - cuerpo excesivo devuelve 413 sin insertar datos
+  ---
+  duration_ms: 9.346456
+  ...
+# Subtest: eliminar una nota conserva las demás y listar entrega copias
+ok 11 - eliminar una nota conserva las demás y listar entrega copias
+  ---
+  duration_ms: 0.625094
+  ...
+# Subtest: index arranca desde otro directorio, sirve Swagger y se detiene con SIGTERM
+ok 12 - index arranca desde otro directorio, sirve Swagger y se detiene con SIGTERM
+  ---
+  duration_ms: 469.475101
+  ...
+# Subtest: index rechaza PORT="abc"
+ok 13 - index rechaza PORT="abc"
+  ---
+  duration_ms: 256.838788
+  ...
+# Subtest: index rechaza PORT="-1"
+ok 14 - index rechaza PORT="-1"
+  ---
+  duration_ms: 223.713082
+  ...
+# Subtest: index rechaza PORT="65536"
+ok 15 - index rechaza PORT="65536"
+  ---
+  duration_ms: 223.847041
+  ...
+# Subtest: index rechaza PORT="3.5"
+ok 16 - index rechaza PORT="3.5"
+  ---
+  duration_ms: 243.351
+  ...
+# Subtest: index rechaza PORT=""
+ok 17 - index rechaza PORT=""
+  ---
+  duration_ms: 262.780239
+  ...
+# Subtest: puerto ocupado produce salida fallida y error comprensible
+ok 18 - puerto ocupado produce salida fallida y error comprensible
+  ---
+  duration_ms: 491.095223
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2287.80542
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

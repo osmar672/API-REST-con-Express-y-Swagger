@@ -1,0 +1,13 @@
+{
+  "node": "v20.20.2",
+  "platform": "linux",
+  "architecture": "x64",
+  "source": "https://nodejs.org/dist/latest-v20.x/",
+  "artifact": "node-v20.20.2-linux-x64.tar.xz",
+  "sha256": "df770b2a6f130ed8627c9782c988fda9669fa23898329a61a871e32f965e007d",
+  "checksumVerification": "sha256sum -c seleccion.sha256: OK",
+  "installationCommand": "npm ci --cache /workspace/.cloud-setup/npm-cache --no-audit --no-fund",
+  "testCommand": "npm test",
+  "passed": 18,
+  "failed": 0
+}

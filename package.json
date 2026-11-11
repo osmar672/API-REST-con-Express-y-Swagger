@@ -19,7 +19,8 @@
     "start": "node lab5-api/src/index.js",
     "dev": "nodemon lab5-api/src/index.js",
     "test": "node --test lab5-api/test/*.test.js",
-    "test:browser": "node scripts/verificar-swagger.js"
+    "test:browser": "node scripts/verificar-swagger.js",
+    "test:dev": "node scripts/verificar-dev.js"
   },
   "engines": {
     "node": ">=20"

@@ -1,0 +1,8 @@
+{
+  "node": "v24.22.1",
+  "command": "npm run dev",
+  "initialCreateStatus": 201,
+  "restartObserved": true,
+  "notesAfterRestart": [],
+  "swaggerAfterRestartStatus": 200
+}

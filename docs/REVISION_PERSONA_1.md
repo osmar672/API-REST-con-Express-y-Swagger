@@ -41,7 +41,14 @@ La prueba de navegador arranca una instancia temporal con puerto libre, interact
 
 La suite HTTP y de proceso tiene **18 pruebas**, incluidas validación de OpenAPI, aislamiento de errores internos, conservación de notas tras rechazos, cuerpo excesivo, arranque desde otro directorio, puerto ocupado y apagado. No contiene pruebas de IA ni consume créditos.
 
-El flujo `.github/workflows/test.yml` repite instalación y pruebas en Node.js 20 y 24. La ejecución local fue con Node.js 24.22.1; no se presenta la configuración del flujo como evidencia de una ejecución remota aprobada.
+El flujo `.github/workflows/test.yml` repite instalación y pruebas en Node.js 20 y 24. Se verificó instalación limpia y 18 pruebas en Node.js 20.20.2, además de las 18 aprobadas en Node.js 24.22.1; no se presenta la configuración del flujo como evidencia de una ejecución remota aprobada.
+
+## Validación adicional y preparación de la exposición
+
+- Node 20.20.2 se obtuvo de `nodejs.org` y su archivo se verificó contra el SHA-256 publicado en `SHASUMS256.txt`, conservando TLS. No se cambió el Node predeterminado del entorno.
+- `docs/evidencias/node20/instalacion.txt` y `pruebas.txt` contienen las salidas de la instalación limpia y las 18 pruebas con ese runtime.
+- `npm run test:dev` inicia el comando real de desarrollo y verifica creación 201, reinicio automático por cambio de archivo, colección vacía tras el reinicio y Swagger 200. El archivo de cambio es temporal; el script lo elimina y detiene los procesos que inició. El registro está en `docs/evidencias/desarrollo.json`.
+- `docs/GUIA_EXPOSICION_PERSONA_A.md` explica el código y una demostración reproducible. `docs/PR_PERSONA_A.md` prepara el pull request y la lista de revisión sin atribuir aprobaciones a B.
 
 ## Límites de la entrega de A
 
