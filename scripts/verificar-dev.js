@@ -4,6 +4,7 @@ const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const os = require('node:os');
 const { setTimeout: delay } = require('node:timers/promises');
 
 async function main() {
@@ -12,7 +13,7 @@ async function main() {
   const marker = path.join(root, 'lab5-api/src/utils', `verificar-dev-${randomUUID()}.js`);
   let created = false;
   const child = spawn('npm', ['run', 'dev'], {
-    cwd: root, env: { ...process.env, PORT: '0', NO_COLOR: '1' },
+    cwd: root, env: { ...process.env, PORT: '0', NO_COLOR: '1', DATABASE_URL: `file:${path.join(os.tmpdir(), `verificar-dev-${randomUUID()}.db`)}` },
     detached: true, stdio: ['ignore', 'pipe', 'pipe'],
   });
   let output = '';
@@ -37,21 +38,24 @@ async function main() {
     const initial = await waitForStart(1);
     const response = await fetch(`http://127.0.0.1:${initial}/api/notas`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ titulo: 'Prueba de recarga', contenido: 'Se pierde al reiniciar.' }),
+      body: JSON.stringify({ titulo: 'Prueba de recarga', contenido: 'Se conserva al reiniciar.' }),
     });
     assert.equal(response.status, 201);
-    assert.equal((await response.json()).titulo, 'Prueba de recarga');
+    const creada = await response.json();
+    assert.equal(creada.titulo, 'Prueba de recarga');
     await fs.writeFile(marker, '// Archivo temporal para comprobar el observador de nodemon.\n', { flag: 'wx' });
     created = true;
     const restarted = await waitForStart(2);
     assert.match(output, /restarting due to changes/);
     const list = await fetch(`http://127.0.0.1:${restarted}/api/notas`);
     assert.equal(list.status, 200);
-    assert.deepEqual(await list.json(), []);
+    // Con SQLite la nota sigue existiendo después de reiniciar.
+    const notasTrasReinicio = await list.json();
+    assert.deepEqual(notasTrasReinicio, [creada]);
     const docs = await fetch(`http://127.0.0.1:${restarted}/api-docs/`);
     assert.equal(docs.status, 200);
     assert.match(await docs.text(), /Swagger UI/);
-    result = { node: process.version, command: 'npm run dev', initialCreateStatus: 201, restartObserved: true, notesAfterRestart: [], swaggerAfterRestartStatus: 200 };
+    result = { node: process.version, command: 'npm run dev', initialCreateStatus: 201, restartObserved: true, notesAfterRestart: notasTrasReinicio, swaggerAfterRestartStatus: 200 };
   } finally {
     if (child.pid) {
       try { process.kill(-child.pid, 'SIGTERM'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
@@ -66,6 +70,6 @@ async function main() {
   const evidence = path.join(root, 'docs/evidencias/desarrollo.json');
   await fs.mkdir(path.dirname(evidence), { recursive: true });
   await fs.writeFile(evidence, JSON.stringify(result, null, 2) + '\n');
-  console.log('npm run dev: creación 201, recarga automática, memoria reiniciada y Swagger 200. Procesos y archivo temporal cerrados.');
+  console.log('npm run dev: creación 201, recarga automática, nota conservada en SQLite y Swagger 200. Procesos y archivo temporal cerrados.');
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });
