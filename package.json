@@ -15,7 +15,6 @@
     "@apidevtools/swagger-parser": "^12.1.0",
     "nodemon": "^3.1.14",
     "playwright": "^1.62.1",
-    "prisma": "6.19.0",
     "supertest": "^7.3.2"
   },
   "name": "lab5-notas-api",

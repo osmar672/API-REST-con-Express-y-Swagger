@@ -1,35 +1,34 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const { AppError } = require('../utils/errors');
-const SYSTEM = 'Eres un asistente útil. Responde en español.';
 
-function crearServicio({ client, model = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001' } = {}) {
-  function obtenerCliente() {
-    if (!client) {
-      if (!process.env.ANTHROPIC_API_KEY) throw new AppError(503, 'IA_NO_CONFIGURADA');
-      client = new Anthropic({ timeout: 45000, maxRetries: 0 });
+// Recibir un cliente permite probar el servicio sin consumir créditos.
+function crearServicio(client) {
+  return {
+    async preguntar(texto, system) {
+      const msg = await client.messages.create({
+        model: process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: system ?? 'Eres un asistente útil. Responde en español.',
+        messages: [{ role: 'user', content: texto }]
+      });
+      const respuesta = msg.content
+        .filter((bloque) => bloque.type === 'text')
+        .map((bloque) => bloque.text).join('\n');
+      return { respuesta, uso: msg.usage };
     }
-    return client;
-  }
-  const parametros = (messages, system) => ({ model, max_tokens: 1024, system: system || SYSTEM, messages });
-  function resultado(msg) {
-    return { respuesta: msg.content.filter((b) => b.type === 'text').map((b) => b.text).join(''), uso: msg.usage, modelo: msg.model || model };
-  }
-  async function preguntar(messages, system) {
-    return resultado(await obtenerCliente().messages.create(parametros(messages, system)));
-  }
-  async function stream(messages, onText, { signal, system } = {}) {
-    const runner = obtenerCliente().messages.stream(parametros(messages, system), { signal });
-    try {
-      for await (const event of runner) {
-        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-          await onText(event.delta.text);
-        }
-      }
-      return resultado(await runner.finalMessage());
-    } finally {
-      if (signal?.aborted) runner.abort();
-    }
-  }
-  return { preguntar, stream };
+  };
 }
-module.exports = { ...crearServicio(), crearServicio };
+
+let servicio;
+async function preguntar(texto, system) {
+  // Inicialización diferida: notas y Swagger arrancan incluso sin una clave.
+  if (!process.env.ANTHROPIC_API_KEY?.trim()) {
+    throw new AppError(502, 'IA_NO_DISPONIBLE');
+  }
+  if (!servicio) {
+    const client = new Anthropic({ timeout: 30000, maxRetries: 1 });
+    servicio = crearServicio(client);
+  }
+  return servicio.preguntar(texto, system);
+}
+module.exports = { preguntar, crearServicio };

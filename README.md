@@ -1,6 +1,10 @@
 # Laboratorio 5: Notas, Claude y retos extra
 
+ feature/notas
 Rama de trabajo: `feature/notas`. Incluye el CRUD del integrante A y, por solicitud posterior, los seis extras: conversación, streaming, límite de solicitudes, consumo/costo, persistencia y pruebas con Claude simulado.
+
+CRUD de notas del **integrante A (persona 1)**, rama `feature/notas`, e integración con Claude del **integrante B (persona 2)**, rama `feature/ia`.
+main
 
 ## Instalación
 
@@ -31,13 +35,9 @@ El CRUD, Swagger y las pruebas no necesitan una clave de Claude. Para solicitude
 
 | Variable | Uso |
 | --- | --- |
-| `PORT` | Entero entre 0 y 65535; 3000 por defecto; 0 selecciona puerto libre |
-| `DATABASE_URL` | Opcional, URL `file:` absoluta; sin definir se usa `prisma/dev.db` |
-| `ANTHROPIC_API_KEY` | Clave local para llamadas reales; sin ella la IA devuelve 503 `IA_NO_CONFIGURADA` |
-| `CLAUDE_MODEL` | Modelo de Claude; valor de ejemplo en `.env.example` |
-| `IA_RATE_LIMIT` | Solicitudes por IP/minuto; entero positivo, 10 por defecto |
-| `CLAUDE_INPUT_USD_PER_MILLION` | Tarifa de entrada en USD por millón; consultar la del modelo usado |
-| `CLAUDE_OUTPUT_USD_PER_MILLION` | Tarifa de salida en USD por millón; configurar junto con la anterior |
+| `PORT` | Puerto del servidor; por defecto 3000; entero entre 0 y 65535 (0 elige un puerto libre) |
+| `ANTHROPIC_API_KEY` | Clave privada de la Claude API; solo la lee `claude.service.js`. Sin ella el CRUD y Swagger funcionan y la IA responde 502 |
+| `CLAUDE_MODEL` | Modelo usado por `messages.create` (por defecto `claude-haiku-4-5-20251001`) |
 
 Las tarifas quedan vacías por defecto: no se inventa un precio. Si existen consumos sin tarifa, el total diario `costoEstimadoUsd` es `null`; `subtotalConTarifaUsd` suma únicamente los registros con tarifa. La estimación es aritmética, no una factura del proveedor. Cada registro conserva las tarifas usadas: cambiarlas no recalcula consumos anteriores.
 
@@ -49,26 +49,9 @@ Las tarifas quedan vacías por defecto: no se inventa un precio. Si existen cons
 | POST | `/api/notas` | Crea `{titulo,contenido}`, devuelve 201 y `Location` |
 | GET | `/api/notas/:id` | Obtiene una nota; 404 si no existe |
 | DELETE | `/api/notas/:id` | 204 sin cuerpo; 404 si no existe |
-| POST | `/api/notas/:id/resumen` | Resume el contenido en tres viñetas; busca la nota antes de llamar a Claude |
-| POST | `/api/ia/preguntar` | Pregunta independiente: `{pregunta}` |
-| POST | `/api/ia/conversaciones` | Crea una conversación; devuelve 201 con `id` |
-| GET | `/api/ia/conversaciones/:id` | Consulta historial |
-| POST | `/api/ia/conversaciones/:id/mensajes` | Añade un turno con `{pregunta}` y devuelve respuesta/uso/modelo |
-| POST | `/api/ia/conversaciones/:id/stream` | Turno con respuesta incremental SSE |
-| GET | `/api/ia/consumo?fecha=YYYY-MM-DD` | Consumo y estimación del día UTC; por defecto hoy UTC |
-| GET | `/api-docs` | Swagger UI con contratos y códigos de error |
-
-Zod valida antes de llamar al SDK: preguntas de 3–2000 caracteres, título de 1–100 y contenido de 1–5000. Se recortan espacios extremos y descartan propiedades desconocidas. IDs de notas: enteros de 1 a 2147483647 (rango Int de Prisma), sin ceros iniciales ni notación científica. Los IDs inválidos o inexistentes responden 404.
-
-Errores: 400 con detalles de validación o JSON inválido; 404 para recurso inexistente; 409 para conversación ocupada o límite de turnos; 413 para cuerpo excesivo; 429 para límite local/proveedor; errores Claude 400/401 se traducen a 502 y 529 a 503 con `IA_NO_DISPONIBLE`. Las respuestas no exponen detalles internos del proveedor.
-
-## Ejemplo de conversación y streaming
-
-Con la clave configurada, crear una conversación:
-
-```bash
-curl -X POST http://localhost:3000/api/ia/conversaciones
-```
+| POST | `/api/ia/preguntar` | 200 con `respuesta` y `uso`; 400 si la pregunta es inválida; 429/502/503 `IA_NO_DISPONIBLE` |
+| POST | `/api/notas/:id/resumen` | 200 con `notaId` y `resumen`; 404 sin llamar a Claude; 429/502/503 `IA_NO_DISPONIBLE` |
+| GET | `/api-docs` | Documentación interactiva Swagger UI |
 
 Copiar el `id` devuelto y sustituir `ID`:
 
@@ -101,7 +84,21 @@ lab5-api/src/services/notas.service.js CRUD asíncrono
 
 Se usa el adaptador oficial `@prisma/adapter-libsql` para SQLite y el motor JavaScript, evitando descargar motores Rust. Prisma, su cliente y el adaptador están fijados en 6.19.0. La configuración de migraciones con adaptador es experimental en esa versión: las migraciones se probaron y deben revisarse antes de actualizar Prisma. `DATABASE_URL` se resuelve en la configuración/constructor del adaptador; usar rutas absolutas para archivos personalizados.
 
-Comandos de base:
+## Integración con Claude (integrante B)
+
+- `src/services/claude.service.js` es el **único** módulo que importa `@anthropic-ai/sdk`. El cliente se crea en la primera pregunta válida (con `timeout` de 30 s y un reintento), de modo que el servidor arranca aunque falte la clave. Usa `messages.create` con `model` desde `CLAUDE_MODEL`, `max_tokens: 1024`, un `system` configurable y devuelve `{ respuesta, uso }`.
+- `src/routes/ia.routes.js` implementa `POST /api/ia/preguntar`. Zod exige una pregunta de 3 a 2000 caracteres (tras recortar espacios) **antes** de llamar a Claude.
+- `POST /api/notas/:id/resumen` (en `notas.routes.js`) llama primero a `notas.buscar(id)` de A: si la nota no existe responde 404 sin gastar créditos. Envía el contenido como mensaje y la instrucción «Resume el texto en 3 viñetas breves, en español.» como `system`.
+- `errorHandler.js` traduce los errores del SDK sin reenviar el mensaje del proveedor; en consola solo se registra estado y tipo:
+
+| Error de Claude | Respuesta de nuestra API |
+| --- | --- |
+| 401, 400 u otro | 502 `{ "error": "IA_NO_DISPONIBLE" }` |
+| 429 | 429 `{ "error": "IA_NO_DISPONIBLE" }` |
+| 529 | 503 `{ "error": "IA_NO_DISPONIBLE" }` |
+| Conexión o timeout | 502 `{ "error": "IA_NO_DISPONIBLE" }` |
+
+`lab5-api/test/ia.test.js` agrega 7 pruebas con `supertest` que simulan `claude.service`: no consumen créditos ni necesitan clave, y **no sustituyen** las capturas reales con ★.
 
 ```bash
 npm run db:generate
@@ -129,11 +126,23 @@ Ver [validación de extras](docs/EXTRAS.md) y [evidencias](docs/evidencias). Git
 
 ![Crear nota desde Swagger](docs/evidencias/01-crear-nota.png)
 
-## Límites de esta aplicación de laboratorio
+Pruebas manuales de pareja: B debe repetir el CRUD desde Swagger UI. A debe probar pregunta libre, resumen, nota inexistente, pregunta de una letra y credencial inválida (cambiar `ANTHROPIC_API_KEY` por un valor falso, reiniciar y preguntar: 502 `IA_NO_DISPONIBLE` y `Claude API: 401` en la consola). Las capturas con ★ requieren llamadas reales con clave: guardarlas sin claves en `docs/evidencias/`.
+
+En Windows, la prueba de `servidor.test.js` que detiene el proceso con SIGTERM falla porque Windows no entrega esa señal al proceso; el resto pasa (24 de 25) y en Linux/CI pasan todas.
 
 No hay cuentas ni autorización: no publicar como servicio multiusuario. Quien conozca un UUID puede acceder a esa conversación; el consumo agregado también es accesible. Los límites por IP y el bloqueo de turnos son locales a un proceso; varias instancias requieren un almacén compartido y autenticación. Express no confía por defecto en `X-Forwarded-For`; un proxy debe configurarse explícitamente con una política de confianza acotada.
 
-La contabilidad registra solicitudes completadas con uso conocido. Fallos, desconexiones y respuestas parciales pueden consumir tokens en el proveedor sin entregar métricas finales: no se presentan como costo cero conocido ni aparecen como consumo confirmado. No hay caché de prompts, herramientas ni cobros adicionales contemplados. Una desconexión cancela el stream y evita guardar un turno incompleto. Las llamadas tienen timeout de 45 segundos, sin reintentos automáticos; historial máximo de 10 turnos y salida máxima de 1024 tokens.
+1. **¿Por qué la clave no puede estar en el frontend?** El usuario puede inspeccionar JavaScript, mapas de código y solicitudes en las herramientas del navegador. Una clave allí permitiría llamadas no autorizadas y gastos a cargo del propietario. Debe permanecer en el backend y fuera de Git.
+2. **¿Qué responder cuando Claude devuelve 401?** Nuestra API responde 502 con `{ "error": "IA_NO_DISPONIBLE" }` (implementado en `errorHandler.js` y cubierto por `ia.test.js`). El 401 significa que la clave **del servidor** fue rechazada por el proveedor, no que el cliente de nuestra API no esté autenticado; reenviarlo confundiría al cliente y podría filtrar detalles internos. El detalle queda solo en la consola del servidor.
+3. **`system` frente a `messages`:** `system` define el comportamiento (rol, idioma, formato); `messages` contiene lo que dice el usuario. En el resumen, `system` es «Resume el texto en 3 viñetas breves, en español.» y el mensaje es el contenido de la nota. Experimento real cambiando `system` a «Resume el texto en una frase»: **[completar con lo observado]**.
+4. **Tokens y costo:** `max_tokens` limita la salida; validar y limitar la pregunta a 2000 caracteres reduce la entrada. Valores reales (campo `uso` de la respuesta):
+
+| Llamada real | input_tokens | output_tokens |
+| --- | --- | --- |
+| Pregunta 1 | [completar] | [completar] |
+| Pregunta 2 | [completar] | [completar] |
+5. **Sin validar antes de Claude:** se gastarían créditos en entradas vacías o demasiado largas y podrían enviarse tipos o parámetros inválidos, causando errores y latencia innecesaria.
+6. **Conflictos de Git:** `feature/ia` se creó desde `main` ya con el CRUD de A, por lo que no hubo conflicto textual. Sí hubo una diferencia de contrato: la versión inicial de B devolvía 400 para ids no numéricos en el resumen, pero A ya validaba `:id` con `router.param` y responde 404; B adaptó su ruta y sus pruebas al comportamiento de A en lugar de duplicar la validación. También se corrigió la ruta `apis` de `swagger.js`, que en Windows dejaba Swagger UI sin endpoints.
 
 ## Pareja y reflexión
 
