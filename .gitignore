@@ -4,3 +4,7 @@ node_modules/
 !.env.example
 coverage/
 *.log
+
+# Base de datos SQLite local (Prisma)
+*.db
+*.db-journal
