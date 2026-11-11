@@ -2,6 +2,7 @@ const router = require('express').Router();
 const { z } = require('zod');
 const validar = require('../middlewares/validar');
 const notas = require('../services/notas.service');
+const claude = require('../services/claude.service');
 const { AppError } = require('../utils/errors');
 
 // Evita que valores como 1e0, 0x1 o 1.0 se interpreten como el id 1.
@@ -105,5 +106,39 @@ router.get('/:id', (req, res) => res.json(notas.buscar(Number(req.params.id))));
 router.delete('/:id', (req, res) => {
   notas.eliminar(Number(req.params.id));
   res.status(204).end();
+});
+
+/**
+ * @openapi
+ * /api/notas/{id}/resumen:
+ *   post:
+ *     summary: Resume una nota en tres viñetas en español
+ *     tags: [IA]
+ *     parameters:
+ *       - $ref: '#/components/parameters/NotaId'
+ *     responses:
+ *       200:
+ *         description: Resumen generado por Claude
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResumenNota'
+ *       404:
+ *         $ref: '#/components/responses/NotaNoEncontrada'
+ *       429:
+ *         $ref: '#/components/responses/IANoDisponible'
+ *       502:
+ *         $ref: '#/components/responses/IANoDisponible'
+ *       503:
+ *         $ref: '#/components/responses/IANoDisponible'
+ */
+router.post('/:id/resumen', async (req, res) => {
+  // buscar() lanza 404 antes de llamar a Claude si la nota no existe.
+  const nota = notas.buscar(Number(req.params.id));
+  const resultado = await claude.preguntar(
+    nota.contenido,
+    'Resume el texto en 3 viñetas breves, en español.'
+  );
+  res.json({ notaId: nota.id, resumen: resultado.respuesta });
 });
 module.exports = router;
