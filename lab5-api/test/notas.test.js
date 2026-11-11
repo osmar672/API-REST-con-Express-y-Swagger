@@ -1,13 +1,15 @@
+const temporary = require('../../scripts/lib/database-temporal')();
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('../src/app');
 let server, base;
 before(async () => {
+  await temporary.ready;
   server = app.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}`;
 });
-after(() => new Promise((resolve) => server.close(resolve)));
+after(async () => { await new Promise((resolve) => server.close(resolve)); await temporary.close(); });
 const post = (body) => fetch(`${base}/api/notas`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 test('CRUD: crear dos notas, listar, buscar y eliminar sin reutilizar ids', async () => {
@@ -69,14 +71,14 @@ test('Swagger UI sirve HTML y documenta las cuatro operaciones de notas', async 
   await require('@apidevtools/swagger-parser').validate(spec);
 });
 
-test('buscar(id) entrega copias y lanza AppError 404 para la integración con B', () => {
+test('buscar(id) entrega copias y lanza AppError 404 para la integración con B', async () => {
   const service = require('../src/services/notas.service');
   const { AppError } = require('../src/utils/errors');
-  const nota = service.crear({ titulo: 'Contrato B', contenido: 'Resumen futuro' });
-  const copy = service.buscar(nota.id);
+  const nota = await service.crear({ titulo: 'Contrato B', contenido: 'Resumen futuro' });
+  const copy = await service.buscar(nota.id);
   copy.contenido = 'Cambio externo';
-  assert.equal(service.buscar(nota.id).contenido, 'Resumen futuro');
-  assert.throws(() => service.buscar(999999), (err) => err instanceof AppError && err.status === 404);
+  assert.equal((await service.buscar(nota.id)).contenido, 'Resumen futuro');
+  await assert.rejects(() => service.buscar(999999), (err) => err instanceof AppError && err.status === 404);
 });
 
 test('no interpreta representaciones ambiguas de id como notas existentes', async () => {
@@ -110,17 +112,17 @@ test('cuerpo excesivo devuelve 413 sin insertar datos', async () => {
   assert.deepEqual(await (await fetch(`${base}/api/notas`)).json(), before);
 });
 
-test('eliminar una nota conserva las demás y listar entrega copias', () => {
+test('eliminar una nota conserva las demás y listar entrega copias', async () => {
   const service = require('../src/services/notas.service');
-  const a = service.crear({ titulo: 'Mantener', contenido: 'A' });
-  const b = service.crear({ titulo: 'Eliminar', contenido: 'B' });
-  const c = service.crear({ titulo: 'Mantener', contenido: 'C' });
-  service.eliminar(b.id);
-  const list = service.listar();
+  const a = await service.crear({ titulo: 'Mantener', contenido: 'A' });
+  const b = await service.crear({ titulo: 'Eliminar', contenido: 'B' });
+  const c = await service.crear({ titulo: 'Mantener', contenido: 'C' });
+  await service.eliminar(b.id);
+  const list = await service.listar();
   assert.ok(list.some((n) => n.id === a.id));
   assert.ok(list.some((n) => n.id === c.id));
   assert.ok(!list.some((n) => n.id === b.id));
   list.find((n) => n.id === a.id).titulo = 'Cambio externo';
   list.length = 0;
-  assert.equal(service.buscar(a.id).titulo, 'Mantener');
+  assert.equal((await service.buscar(a.id)).titulo, 'Mantener');
 });

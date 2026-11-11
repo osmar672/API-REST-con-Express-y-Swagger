@@ -18,7 +18,10 @@ server.on('error', (error) => {
 
 // Permite detener el servidor sin interrumpir las solicitudes en curso.
 function detener() {
-  server.close(() => process.exit(0));
+  server.close(async () => {
+    await require('./config/database').$disconnect();
+    process.exit(0);
+  });
   setTimeout(() => process.exit(1), 5000).unref();
 }
 process.once('SIGTERM', detener);

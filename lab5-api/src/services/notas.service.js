@@ -1,25 +1,17 @@
+const database = require('../config/database');
 const { AppError } = require('../utils/errors');
-
-const notas = [];
-let nextId = 1;
-const listar = () => notas.map((nota) => ({ ...nota }));
-
-// Contrato de integración con B: id numérico; nota o AppError 404.
-function buscar(id) {
-  const nota = notas.find((nota) => nota.id === id);
-  if (!nota) throw new AppError(404, 'Nota no encontrada');
-  return { ...nota };
+function crearServicio(db) {
+  const listar = () => db.nota.findMany({ orderBy: { id: 'asc' } });
+  async function buscar(id) {
+    const nota = await db.nota.findUnique({ where: { id } });
+    if (!nota) throw new AppError(404, 'Nota no encontrada');
+    return nota;
+  }
+  const crear = (data) => db.nota.create({ data });
+  async function eliminar(id) {
+    const result = await db.nota.deleteMany({ where: { id } });
+    if (!result.count) throw new AppError(404, 'Nota no encontrada');
+  }
+  return { listar, buscar, crear, eliminar };
 }
-
-function crear({ titulo, contenido }) {
-  const nota = { id: nextId++, titulo, contenido };
-  notas.push(nota);
-  return { ...nota };
-}
-
-function eliminar(id) {
-  buscar(id);
-  notas.splice(notas.findIndex((nota) => nota.id === id), 1);
-}
-
-module.exports = { listar, buscar, crear, eliminar };
+module.exports = { ...crearServicio(database), crearServicio };

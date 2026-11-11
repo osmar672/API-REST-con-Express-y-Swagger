@@ -1,18 +1,21 @@
 const path = require('node:path');
 const swaggerJsdoc = require('swagger-jsdoc');
+const ia = require('./openapi-ia');
 
 module.exports = swaggerJsdoc({
   failOnErrors: true,
   definition: {
     openapi: '3.0.0',
-    info: { title: 'Lab 5: Notas + IA', version: '1.0.0', description: 'CRUD del integrante A. Las notas se guardan en memoria y se pierden al reiniciar. Los extremos de titulo y contenido se recortan antes de validar.' },
+    info: { title: 'Lab 5: Notas + IA', version: '1.0.0', description: 'CRUD del integrante A. Notas, historial y consumo persisten en SQLite. Los extremos de titulo y contenido se recortan antes de validar.' },
     servers: [{ url: '/' }],
-    tags: [{ name: 'Notas', description: 'Notas almacenadas en memoria' }, { name: 'IA', description: 'Integración a cargo del integrante B' }],
+    tags: [{ name: 'Notas', description: 'Notas almacenadas en memoria' }, { name: 'IA', description: 'Claude, historial, streaming y consumo' }],
     paths: {
+      ...ia.paths,
       '/api-docs': { get: { summary: 'Abre la documentación interactiva', responses: { 200: { description: 'Interfaz Swagger UI', content: { 'text/html': { schema: { type: 'string' } } } } } } },
     },
     components: {
       schemas: {
+        ...ia.schemas,
         NotaEntrada: {
           type: 'object', required: ['titulo', 'contenido'],
           properties: {

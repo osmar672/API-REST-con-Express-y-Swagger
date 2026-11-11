@@ -1,7 +1,8 @@
-const router = require('express').Router();
+const { Router } = require('express');
 const { z } = require('zod');
 const validar = require('../middlewares/validar');
-const notas = require('../services/notas.service');
+module.exports = (notas, claude, consumo, limitarIA) => {
+const router = Router();
 const { AppError } = require('../utils/errors');
 
 // Evita que valores como 1e0, 0x1 o 1.0 se interpreten como el id 1.
@@ -32,7 +33,7 @@ const notaSchema = z.object({
  *               items:
  *                 $ref: '#/components/schemas/Nota'
  */
-router.get('/', (req, res) => res.json(notas.listar()));
+router.get('/', async (req, res) => res.json(await notas.listar()));
 
 /**
  * @openapi
@@ -63,8 +64,8 @@ router.get('/', (req, res) => res.json(notas.listar()));
  *       413:
  *         description: Cuerpo demasiado grande
  */
-router.post('/', validar(notaSchema), (req, res) => {
-  const nota = notas.crear(req.body);
+router.post('/', validar(notaSchema), async (req, res) => {
+  const nota = await notas.crear(req.body);
   res.location(`/api/notas/${nota.id}`).status(201).json(nota);
 });
 
@@ -86,7 +87,7 @@ router.post('/', validar(notaSchema), (req, res) => {
  *       404:
  *         $ref: '#/components/responses/NotaNoEncontrada'
  */
-router.get('/:id', (req, res) => res.json(notas.buscar(Number(req.params.id))));
+router.get('/:id', async (req, res) => res.json(await notas.buscar(Number(req.params.id))));
 
 /**
  * @openapi
@@ -102,8 +103,15 @@ router.get('/:id', (req, res) => res.json(notas.buscar(Number(req.params.id))));
  *       404:
  *         $ref: '#/components/responses/NotaNoEncontrada'
  */
-router.delete('/:id', (req, res) => {
-  notas.eliminar(Number(req.params.id));
+router.delete('/:id', async (req, res) => {
+  await notas.eliminar(Number(req.params.id));
   res.status(204).end();
 });
-module.exports = router;
+router.post('/:id/resumen', limitarIA, async (req, res) => {
+  const nota = await notas.buscar(Number(req.params.id));
+  const result = await claude.preguntar([{ role: 'user', content: nota.contenido }], 'Resume el texto en 3 viñetas breves, en español.');
+  await consumo.registrar(result, 'resumen');
+  res.json({ notaId: nota.id, resumen: result.respuesta, uso: result.uso });
+});
+return router;
+};
