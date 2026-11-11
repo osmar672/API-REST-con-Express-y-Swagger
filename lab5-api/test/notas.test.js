@@ -78,3 +78,49 @@ test('buscar(id) entrega copias y lanza AppError 404 para la integración con B'
   assert.equal(service.buscar(nota.id).contenido, 'Resumen futuro');
   assert.throws(() => service.buscar(999999), (err) => err instanceof AppError && err.status === 404);
 });
+
+test('no interpreta representaciones ambiguas de id como notas existentes', async () => {
+  const nota = await (await post({ titulo: 'Identificador', contenido: 'Texto' })).json();
+  for (const id of [`0${nota.id}`, `${nota.id}.0`, `${nota.id}e0`, `0x${nota.id.toString(16)}`, '9007199254740992']) {
+    for (const method of ['GET', 'DELETE']) {
+      assert.equal((await fetch(`${base}/api/notas/${id}`, { method })).status, 404);
+    }
+  }
+  assert.equal((await fetch(`${base}/api/notas/${nota.id}`)).status, 200);
+});
+
+test('crear publica Location y los errores de validación no alteran las notas', async () => {
+  const before = await (await fetch(`${base}/api/notas`)).json();
+  const response = await post({ titulo: '', contenido: 'Inválido' });
+  assert.equal(response.status, 400);
+  const data = await response.json();
+  assert.ok(data.errores.some((issue) => issue.path.includes('titulo')));
+  assert.deepEqual(await (await fetch(`${base}/api/notas`)).json(), before);
+  const valid = await post({ titulo: 'Recurso', contenido: 'Ubicación' });
+  const nota = await valid.json();
+  assert.equal(valid.headers.get('location'), `/api/notas/${nota.id}`);
+  assert.deepEqual(await (await fetch(base + valid.headers.get('location'))).json(), nota);
+});
+
+test('cuerpo excesivo devuelve 413 sin insertar datos', async () => {
+  const before = await (await fetch(`${base}/api/notas`)).json();
+  const response = await post({ titulo: 'Grande', contenido: 'x'.repeat(110000) });
+  assert.equal(response.status, 413);
+  assert.deepEqual(await response.json(), { error: 'Cuerpo demasiado grande' });
+  assert.deepEqual(await (await fetch(`${base}/api/notas`)).json(), before);
+});
+
+test('eliminar una nota conserva las demás y listar entrega copias', () => {
+  const service = require('../src/services/notas.service');
+  const a = service.crear({ titulo: 'Mantener', contenido: 'A' });
+  const b = service.crear({ titulo: 'Eliminar', contenido: 'B' });
+  const c = service.crear({ titulo: 'Mantener', contenido: 'C' });
+  service.eliminar(b.id);
+  const list = service.listar();
+  assert.ok(list.some((n) => n.id === a.id));
+  assert.ok(list.some((n) => n.id === c.id));
+  assert.ok(!list.some((n) => n.id === b.id));
+  list.find((n) => n.id === a.id).titulo = 'Cambio externo';
+  list.length = 0;
+  assert.equal(service.buscar(a.id).titulo, 'Mantener');
+});

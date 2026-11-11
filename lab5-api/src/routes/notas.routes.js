@@ -2,6 +2,15 @@ const router = require('express').Router();
 const { z } = require('zod');
 const validar = require('../middlewares/validar');
 const notas = require('../services/notas.service');
+const { AppError } = require('../utils/errors');
+
+// Evita que valores como 1e0, 0x1 o 1.0 se interpreten como el id 1.
+router.param('id', (req, res, next, value) => {
+  if (!/^[1-9]\d*$/.test(value) || !Number.isSafeInteger(Number(value))) {
+    return next(new AppError(404, 'Nota no encontrada'));
+  }
+  next();
+});
 const notaSchema = z.object({
   titulo: z.string().trim().min(1).max(100),
   contenido: z.string().trim().min(1).max(5000),
@@ -40,6 +49,11 @@ router.get('/', (req, res) => res.json(notas.listar()));
  *     responses:
  *       201:
  *         description: Nota creada
+ *         headers:
+ *           Location:
+ *             description: Ruta de la nota creada
+ *             schema:
+ *               type: string
  *         content:
  *           application/json:
  *             schema:
@@ -49,7 +63,10 @@ router.get('/', (req, res) => res.json(notas.listar()));
  *       413:
  *         description: Cuerpo demasiado grande
  */
-router.post('/', validar(notaSchema), (req, res) => res.status(201).json(notas.crear(req.body)));
+router.post('/', validar(notaSchema), (req, res) => {
+  const nota = notas.crear(req.body);
+  res.location(`/api/notas/${nota.id}`).status(201).json(nota);
+});
 
 /**
  * @openapi

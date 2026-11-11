@@ -5,16 +5,19 @@ module.exports = swaggerJsdoc({
   failOnErrors: true,
   definition: {
     openapi: '3.0.0',
-    info: { title: 'Lab 5: Notas + IA', version: '1.0.0' },
+    info: { title: 'Lab 5: Notas + IA', version: '1.0.0', description: 'CRUD del integrante A. Las notas se guardan en memoria y se pierden al reiniciar. Los extremos de titulo y contenido se recortan antes de validar.' },
     servers: [{ url: '/' }],
     tags: [{ name: 'Notas', description: 'Notas almacenadas en memoria' }, { name: 'IA', description: 'Integración a cargo del integrante B' }],
+    paths: {
+      '/api-docs': { get: { summary: 'Abre la documentación interactiva', responses: { 200: { description: 'Interfaz Swagger UI', content: { 'text/html': { schema: { type: 'string' } } } } } } },
+    },
     components: {
       schemas: {
         NotaEntrada: {
           type: 'object', required: ['titulo', 'contenido'],
           properties: {
-            titulo: { type: 'string', minLength: 1, maxLength: 100 },
-            contenido: { type: 'string', minLength: 1, maxLength: 5000 },
+            titulo: { type: 'string', minLength: 1, maxLength: 100, example: 'Repaso de Express' },
+            contenido: { type: 'string', minLength: 1, maxLength: 5000, example: 'Express permite organizar rutas y middlewares.' },
           },
         },
         Nota: {
