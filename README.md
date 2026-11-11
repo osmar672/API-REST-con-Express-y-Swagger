@@ -20,7 +20,20 @@ npm run dev
 Para ejecución sin recarga: `npm start`. Para las pruebas: `npm test`.
 Swagger UI está en `http://localhost:3000/api-docs` (o el puerto configurado).
 El código está en `lab5-api/src`; los scripts se ejecutan desde la raíz, donde están los manifiestos existentes.
-Las notas se guardan en memoria: reiniciar el proceso elimina los datos.
+Las notas se guardan en **SQLite con Prisma** (reto extra de persistencia): se conservan al reiniciar. `npm ci` genera el cliente de Prisma y `npm run dev` / `npm start` aplican las migraciones antes de arrancar.
+
+### Base de datos (Prisma + SQLite)
+
+| Archivo / comando | Para qué sirve |
+| --- | --- |
+| `prisma/schema.prisma` | Modelo `Nota` (`id` autoincremental, `titulo`, `contenido`), tabla `notas` |
+| `prisma/migrations/` | SQL que crea la tabla; se sube a Git |
+| `prisma/dev.db` | Archivo de la base local; **no** se sube (`*.db` en `.gitignore`) |
+| `prisma.config.js` y `lab5-api/src/config/database.js` | Ruta de la base (`DATABASE_URL`), relativa a la raíz del proyecto |
+| `npm run db:migrate` | Crea una migración nueva después de cambiar el esquema |
+| `npm run db:studio` | Abre Prisma Studio para ver y editar las notas en el navegador |
+
+`notas.service.js` mantiene el contrato con B (`buscar(id)` devuelve `{ id, titulo, contenido }` o lanza `AppError(404)`), pero ahora sus funciones son asíncronas y las rutas usan `await`. Para empezar con la base vacía basta con borrar `prisma/dev.db`; se recrea al arrancar. Las pruebas usan una base temporal por archivo (`lab5-api/test/setup.js`) y no tocan `dev.db`.
 
 `node_modules` está excluido de Git. Las dependencias se instalan con `npm ci`; no se suben a la rama.
 
@@ -34,6 +47,7 @@ Las notas se guardan en memoria: reiniciar el proceso elimina los datos.
 | `GROQ_MODEL` | Modelo de Groq (por defecto `openai/gpt-oss-20b`) |
 | `ANTHROPIC_API_KEY` | Clave privada de la Claude API; se usa si `LLM_PROVIDER=claude` |
 | `CLAUDE_MODEL` | Modelo usado por `messages.create` (por defecto `claude-haiku-4-5-20251001`) |
+| `DATABASE_URL` | Archivo SQLite (por defecto `file:./prisma/dev.db`, relativo a la raíz) |
 
 Las claves solo las lee `claude.service.js`. Sin la clave del proveedor elegido, el CRUD y Swagger funcionan y la IA responde 502.
 
