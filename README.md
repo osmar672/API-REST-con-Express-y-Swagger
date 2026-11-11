@@ -31,7 +31,7 @@ Las notas se guardan en memoria: reiniciar el proceso elimina los datos.
 | `PORT` | Puerto del servidor; por defecto 3000; entero entre 0 y 65535 (0 elige un puerto libre) |
 | `LLM_PROVIDER` | Proveedor de IA: `groq` o `claude` (por defecto `claude`) |
 | `GROQ_API_KEY` | Clave privada de Groq; se usa si `LLM_PROVIDER=groq` |
-| `GROQ_MODEL` | Modelo de Groq (por defecto `llama-3.3-70b-versatile`) |
+| `GROQ_MODEL` | Modelo de Groq (por defecto `openai/gpt-oss-20b`) |
 | `ANTHROPIC_API_KEY` | Clave privada de la Claude API; se usa si `LLM_PROVIDER=claude` |
 | `CLAUDE_MODEL` | Modelo usado por `messages.create` (por defecto `claude-haiku-4-5-20251001`) |
 

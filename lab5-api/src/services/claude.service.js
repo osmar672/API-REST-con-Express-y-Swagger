@@ -12,7 +12,7 @@ const PROVEEDORES = {
   },
   groq: {
     variableClave: 'GROQ_API_KEY',
-    modelo: () => process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+    modelo: () => process.env.GROQ_MODEL || 'openai/gpt-oss-20b',
     // Groq es compatible con la API de OpenAI: basta con cambiar baseURL.
     crearCliente: () => new OpenAI({
       baseURL: 'https://api.groq.com/openai/v1',

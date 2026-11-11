@@ -41,7 +41,7 @@ test('con Groq arma chat.completions.create y normaliza los tokens', async () =>
   }, 'groq');
   const r = await servicio.preguntar('Pregunta', 'Responde breve.');
   assert.equal(parametros.max_tokens, 1024);
-  assert.equal(parametros.model, process.env.GROQ_MODEL || 'llama-3.3-70b-versatile');
+  assert.equal(parametros.model, process.env.GROQ_MODEL || 'openai/gpt-oss-20b');
   assert.deepEqual(parametros.messages, [{ role: 'system', content: 'Responde breve.' }, { role: 'user', content: 'Pregunta' }]);
   assert.deepEqual(r, { respuesta: 'Hola', uso: { input_tokens: 7, output_tokens: 3 } });
 });
