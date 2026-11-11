@@ -1,0 +1,42 @@
+{
+  "browser": "Chromium",
+  "cases": [
+    {
+      "method": "POST",
+      "path": "/api/notas",
+      "status": 201,
+      "capture": "01-crear-nota.png"
+    },
+    {
+      "method": "GET",
+      "path": "/api/notas",
+      "status": 200,
+      "capture": "02-listar-notas.png"
+    },
+    {
+      "method": "GET",
+      "path": "/api/notas/1",
+      "status": 200,
+      "capture": "03-consultar-nota.png"
+    },
+    {
+      "method": "POST",
+      "path": "/api/notas",
+      "status": 400,
+      "capture": "04-validacion-zod.png"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/notas/1",
+      "status": 204,
+      "capture": "05-eliminar-nota.png"
+    },
+    {
+      "method": "GET",
+      "path": "/api/notas/1",
+      "status": 404,
+      "capture": "06-nota-eliminada.png"
+    }
+  ],
+  "pageErrors": []
+}

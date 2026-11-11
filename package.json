@@ -8,6 +8,20 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "@apidevtools/swagger-parser": "^12.1.0",
+    "nodemon": "^3.1.14",
+    "playwright": "^1.62.1"
+  },
+  "name": "lab5-notas-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node lab5-api/src/index.js",
+    "dev": "nodemon lab5-api/src/index.js",
+    "test": "node --test lab5-api/test/*.test.js",
+    "test:browser": "node scripts/verificar-swagger.js"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
