@@ -80,7 +80,7 @@ Swagger usa rutas absolutas de archivos para funcionar independientemente del di
 
 Además cubre IDs ambiguos, cabecera `Location`, cuerpo excesivo, aislamiento de notas, errores internos, arranque desde otro directorio, valores inválidos de `PORT`, puerto ocupado y apagado con SIGTERM.
 
-Resultado de la revisión: **18 aprobadas, 0 fallidas** en Node.js 24. También se agregó un flujo de GitHub Actions para ejecutar `npm ci` y `npm test` en Node.js 20 y 24 con cada push a esta rama o pull request hacia `main`; su resultado remoto debe consultarse en la pestaña Actions.
+Resultado de la revisión: **18 aprobadas, 0 fallidas** en Node.js 20.20.2 y 24.22.1. Se verificó una instalación limpia con Node 20; los resultados están en [`docs/evidencias/node20`](docs/evidencias/node20). También se agregó un flujo de GitHub Actions para ejecutar `npm ci`, `npm test` y `npm run test:dev` en Node.js 20 y 24 con cada push a esta rama o pull request hacia `main`; su resultado remoto debe consultarse en la pestaña Actions.
 
 La prueba adicional `npm run test:browser` interactúa con Swagger UI desde Chromium. Para preparar el navegador: `npx playwright install chromium`. Si ya está instalado en Linux: `CHROMIUM_PATH=/usr/bin/chromium npm run test:browser`. Guarda seis capturas reales en [`docs/evidencias`](docs/evidencias) y un registro de resultados. Ver el [informe de revisión](docs/REVISION_PERSONA_1.md).
 
@@ -98,6 +98,12 @@ Pruebas manuales de pareja: B debe repetir el CRUD desde Swagger UI. A deberá p
 4. **Tokens y costo:** `max_tokens` limita la salida; validar y limitar el texto reduce la entrada. Los valores reales `input_tokens` y `output_tokens` de dos llamadas quedan pendientes: no se han realizado llamadas a Claude.
 5. **Sin validar antes de Claude:** se gastarían créditos en entradas vacías o demasiado largas y podrían enviarse tipos o parámetros inválidos, causando errores y latencia innecesaria.
 6. **Conflictos de Git:** aún no se ha integrado `feature/ia`; no hay un conflicto real que documentar. Tras la revisión de pareja se deberá registrar si hubo conflictos y cómo se resolvieron.
+
+## Modo desarrollo y exposición
+
+`npm run test:dev` comprueba en Linux/macOS/WSL el arranque mediante `npm run dev`, la creación de una nota y la recarga de nodemon al crear un archivo temporal. Después verifica que las notas se reiniciaron y Swagger sigue respondiendo. Cierra los procesos y elimina el archivo temporal; guarda el resultado en `docs/evidencias/desarrollo.json`. Utiliza un puerto libre y no necesita Claude.
+
+Para preparar tu explicación, consulta la [guía de exposición de A](docs/GUIA_EXPOSICION_PERSONA_A.md), con recorrido del código, demostración y preguntas posibles. El [contenido del pull request y la lista para revisión de B](docs/PR_PERSONA_A.md) están preparados para usarse en GitHub.
 
 ## Colaboración y entrega
 
