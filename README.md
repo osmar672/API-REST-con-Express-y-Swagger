@@ -20,20 +20,27 @@ npm run dev
 Para ejecución sin recarga: `npm start`. Para las pruebas: `npm test`.
 Swagger UI está en `http://localhost:3000/api-docs` (o el puerto configurado).
 El código está en `lab5-api/src`; los scripts se ejecutan desde la raíz, donde están los manifiestos existentes.
-Las notas se guardan en **SQLite con Prisma** (reto extra de persistencia): se conservan al reiniciar. `npm ci` genera el cliente de Prisma y `npm run dev` / `npm start` aplican las migraciones antes de arrancar.
+Las notas se guardan en **MySQL con Prisma** (reto extra de persistencia): se conservan al reiniciar. Requiere un servidor MySQL 8 en marcha y `DATABASE_URL` en `.env`. `npm ci` genera el cliente de Prisma y `npm run dev` / `npm start` aplican las migraciones antes de arrancar (si la base `lab5_notas` no existe, Prisma la crea).
 
-### Base de datos (Prisma + SQLite)
+### Base de datos (Prisma + MySQL)
+
+```
+DATABASE_URL=mysql://USUARIO:CONTRASEÑA@localhost:3306/lab5_notas
+```
+
+Si la contraseña tiene símbolos, se escriben codificados: `@` → `%40`, `#` → `%23`, `/` → `%2F`.
 
 | Archivo / comando | Para qué sirve |
 | --- | --- |
-| `prisma/schema.prisma` | Modelo `Nota` (`id` autoincremental, `titulo`, `contenido`), tabla `notas` |
+| `prisma/schema.prisma` | Modelo `Nota` (`id` autoincremental, `titulo` VARCHAR(100), `contenido` TEXT), tabla `notas` |
 | `prisma/migrations/` | SQL que crea la tabla; se sube a Git |
-| `prisma/dev.db` | Archivo de la base local; **no** se sube (`*.db` en `.gitignore`) |
-| `prisma.config.js` y `lab5-api/src/config/database.js` | Ruta de la base (`DATABASE_URL`), relativa a la raíz del proyecto |
+| `prisma.config.js` y `lab5-api/src/config/database.js` | Leen `DATABASE_URL`; la API se conecta con el adaptador `@prisma/adapter-mariadb` (compatible con MySQL) |
 | `npm run db:migrate` | Crea una migración nueva después de cambiar el esquema |
 | `npm run db:studio` | Abre Prisma Studio para ver y editar las notas en el navegador |
 
-`notas.service.js` mantiene el contrato con B (`buscar(id)` devuelve `{ id, titulo, contenido }` o lanza `AppError(404)`), pero ahora sus funciones son asíncronas y las rutas usan `await`. Para empezar con la base vacía basta con borrar `prisma/dev.db`; se recrea al arrancar. Las pruebas usan una base temporal por archivo (`lab5-api/test/setup.js`) y no tocan `dev.db`.
+`notas.service.js` mantiene el contrato con B (`buscar(id)` devuelve `{ id, titulo, contenido }` o lanza `AppError(404)`), pero ahora sus funciones son asíncronas y las rutas usan `await`. Si MySQL está apagado, las rutas de notas responden 500 `Error interno`.
+
+Las pruebas (`lab5-api/test/setup.mjs`) crean una base temporal `lab5_test_xxxx` por archivo usando el mismo usuario de `DATABASE_URL` (necesita permiso `CREATE`/`DROP`), y la borran al terminar: no tocan `lab5_notas`. En GitHub Actions se usa un contenedor `mysql:8.4` desechable.
 
 `node_modules` está excluido de Git. Las dependencias se instalan con `npm ci`; no se suben a la rama.
 
@@ -47,7 +54,7 @@ Las notas se guardan en **SQLite con Prisma** (reto extra de persistencia): se c
 | `GROQ_MODEL` | Modelo de Groq (por defecto `openai/gpt-oss-20b`) |
 | `ANTHROPIC_API_KEY` | Clave privada de la Claude API; se usa si `LLM_PROVIDER=claude` |
 | `CLAUDE_MODEL` | Modelo usado por `messages.create` (por defecto `claude-haiku-4-5-20251001`) |
-| `DATABASE_URL` | Archivo SQLite (por defecto `file:./prisma/dev.db`, relativo a la raíz) |
+| `DATABASE_URL` | Conexión MySQL: `mysql://USUARIO:CONTRASEÑA@localhost:3306/lab5_notas` |
 
 Las claves solo las lee `claude.service.js`. Sin la clave del proveedor elegido, el CRUD y Swagger funcionan y la IA responde 502.
 

@@ -5,6 +5,6 @@ node_modules/
 coverage/
 *.log
 
-# Base de datos SQLite local (Prisma)
+# Archivos de base de datos locales
 *.db
 *.db-journal

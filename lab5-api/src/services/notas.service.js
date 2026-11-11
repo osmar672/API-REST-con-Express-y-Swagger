@@ -1,10 +1,10 @@
 const { PrismaClient } = require('@prisma/client');
-const { PrismaBetterSqlite3 } = require('@prisma/adapter-better-sqlite3');
+const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
 const { AppError } = require('../utils/errors');
-const { urlBaseDeDatos } = require('../config/database');
+const { opcionesConexion } = require('../config/database');
 
-// Las notas se guardan en SQLite mediante Prisma (tabla "notas").
-const prisma = new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: urlBaseDeDatos() }) });
+// Las notas se guardan en MySQL mediante Prisma (tabla "notas").
+const prisma = new PrismaClient({ adapter: new PrismaMariaDb(opcionesConexion()) });
 
 // Solo se devuelven estos campos: mantiene el contrato { id, titulo, contenido }.
 const campos = { id: true, titulo: true, contenido: true };

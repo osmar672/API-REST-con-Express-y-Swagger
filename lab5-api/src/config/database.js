@@ -1,14 +1,24 @@
-const path = require('node:path');
+// Conexión a MySQL. DATABASE_URL tiene el formato:
+//   mysql://USUARIO:CONTRASEÑA@localhost:3306/lab5_notas
+const URL_POR_DEFECTO = 'mysql://root@localhost:3306/lab5_notas';
 
-// Raíz del repositorio: allí están package.json y la carpeta prisma/.
-const RAIZ = path.resolve(__dirname, '../../..');
-
-// Devuelve la URL de SQLite con ruta absoluta para que la API use el mismo
-// archivo aunque se arranque desde otra carpeta. Por defecto: prisma/dev.db.
 function urlBaseDeDatos() {
-  const valor = process.env.DATABASE_URL?.trim() || 'file:./prisma/dev.db';
-  const archivo = valor.replace(/^file:/, '');
-  return `file:${path.resolve(RAIZ, archivo)}`;
+  return process.env.DATABASE_URL?.trim() || URL_POR_DEFECTO;
 }
 
-module.exports = { urlBaseDeDatos, RAIZ };
+// Convierte la URL en las opciones del conector mariadb (compatible con MySQL).
+function opcionesConexion(url = urlBaseDeDatos()) {
+  const u = new URL(url);
+  return {
+    host: u.hostname,
+    port: Number(u.port) || 3306,
+    user: decodeURIComponent(u.username),
+    password: decodeURIComponent(u.password),
+    database: decodeURIComponent(u.pathname.slice(1)),
+    // MySQL 8 usa caching_sha2_password; sin SSL necesita la clave pública del servidor.
+    allowPublicKeyRetrieval: true,
+    connectionLimit: 5,
+  };
+}
+
+module.exports = { urlBaseDeDatos, opcionesConexion };

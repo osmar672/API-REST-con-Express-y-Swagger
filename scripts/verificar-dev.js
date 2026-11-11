@@ -4,7 +4,15 @@ const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const fs = require('node:fs/promises');
 const path = require('node:path');
-const os = require('node:os');
+require('dotenv').config({ quiet: true });
+const { urlBaseDeDatos } = require('../lab5-api/src/config/database');
+
+// Base MySQL aparte para no tocar las notas reales; `prisma migrate deploy` la crea.
+function urlTemporal() {
+  const url = new URL(urlBaseDeDatos());
+  url.pathname = `/verificar_dev_${randomUUID().slice(0, 8)}`;
+  return url.href;
+}
 const { setTimeout: delay } = require('node:timers/promises');
 
 async function main() {
@@ -13,7 +21,7 @@ async function main() {
   const marker = path.join(root, 'lab5-api/src/utils', `verificar-dev-${randomUUID()}.js`);
   let created = false;
   const child = spawn('npm', ['run', 'dev'], {
-    cwd: root, env: { ...process.env, PORT: '0', NO_COLOR: '1', DATABASE_URL: `file:${path.join(os.tmpdir(), `verificar-dev-${randomUUID()}.db`)}` },
+    cwd: root, env: { ...process.env, PORT: '0', NO_COLOR: '1', DATABASE_URL: urlTemporal() },
     detached: true, stdio: ['ignore', 'pipe', 'pipe'],
   });
   let output = '';
@@ -49,7 +57,7 @@ async function main() {
     assert.match(output, /restarting due to changes/);
     const list = await fetch(`http://127.0.0.1:${restarted}/api/notas`);
     assert.equal(list.status, 200);
-    // Con SQLite la nota sigue existiendo después de reiniciar.
+    // Con MySQL la nota sigue existiendo después de reiniciar.
     const notasTrasReinicio = await list.json();
     assert.deepEqual(notasTrasReinicio, [creada]);
     const docs = await fetch(`http://127.0.0.1:${restarted}/api-docs/`);
@@ -70,6 +78,6 @@ async function main() {
   const evidence = path.join(root, 'docs/evidencias/desarrollo.json');
   await fs.mkdir(path.dirname(evidence), { recursive: true });
   await fs.writeFile(evidence, JSON.stringify(result, null, 2) + '\n');
-  console.log('npm run dev: creación 201, recarga automática, nota conservada en SQLite y Swagger 200. Procesos y archivo temporal cerrados.');
+  console.log('npm run dev: creación 201, recarga automática, nota conservada en MySQL y Swagger 200. Procesos y archivo temporal cerrados.');
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });

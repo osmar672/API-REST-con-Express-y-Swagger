@@ -1,4 +1,4 @@
-// Esquema de la base de datos SQLite (reto extra: persistencia con Prisma).
+// Esquema de la base de datos MySQL (reto extra: persistencia con Prisma).
 // Después de cambiar este archivo: npm run db:migrate
 
 generator client {
@@ -6,13 +6,13 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
 }
 
 model Nota {
   id        Int    @id @default(autoincrement())
-  titulo    String
-  contenido String
+  titulo    String @db.VarChar(100)
+  contenido String @db.Text
 
   @@map("notas")
 }

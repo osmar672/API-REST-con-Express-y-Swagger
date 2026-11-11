@@ -5,9 +5,9 @@ module.exports = swaggerJsdoc({
   failOnErrors: true,
   definition: {
     openapi: '3.0.0',
-    info: { title: 'Lab 5: Notas + IA', version: '1.0.0', description: 'CRUD de notas (integrante A) e integración con Claude (integrante B). Las notas se guardan en SQLite con Prisma y se conservan al reiniciar. Los extremos de titulo y contenido se recortan antes de validar.' },
+    info: { title: 'Lab 5: Notas + IA', version: '1.0.0', description: 'CRUD de notas (integrante A) e integración con Claude (integrante B). Las notas se guardan en MySQL con Prisma y se conservan al reiniciar. Los extremos de titulo y contenido se recortan antes de validar.' },
     servers: [{ url: '/' }],
-    tags: [{ name: 'Notas', description: 'Notas guardadas en SQLite (Prisma)' }, { name: 'IA', description: 'Preguntas y resúmenes con Groq o Claude (integrante B)' }],
+    tags: [{ name: 'Notas', description: 'Notas guardadas en MySQL (Prisma)' }, { name: 'IA', description: 'Preguntas y resúmenes con Groq o Claude (integrante B)' }],
     paths: {
       '/api-docs': { get: { summary: 'Abre la documentación interactiva', responses: { 200: { description: 'Interfaz Swagger UI', content: { 'text/html': { schema: { type: 'string' } } } } } } },
     },
