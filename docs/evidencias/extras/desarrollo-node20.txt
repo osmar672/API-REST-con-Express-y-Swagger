@@ -1,0 +1,10 @@
+
+> lab5-notas-api@1.0.0 test:dev
+> node scripts/verificar-dev.js
+
+npm run dev: creación 201, recarga automática, persistencia SQLite comprobada y Swagger 200. Procesos y archivo temporal cerrados.
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

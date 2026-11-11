@@ -1,5 +1,6 @@
 const path = require('node:path');
 const swaggerJsdoc = require('swagger-jsdoc');
+const ia = require('./openapi-ia');
 
 module.exports = swaggerJsdoc({
   failOnErrors: true,
@@ -7,12 +8,14 @@ module.exports = swaggerJsdoc({
     openapi: '3.0.0',
     info: { title: 'Lab 5: Notas + IA', version: '1.0.0', description: 'CRUD de notas (integrante A) e integración con Claude (integrante B). Las notas se guardan en memoria y se pierden al reiniciar. Los extremos de titulo y contenido se recortan antes de validar.' },
     servers: [{ url: '/' }],
-    tags: [{ name: 'Notas', description: 'Notas almacenadas en memoria' }, { name: 'IA', description: 'Integración a cargo del integrante B' }],
+    tags: [{ name: 'Notas', description: 'Notas almacenadas en memoria' }, { name: 'IA', description: 'Claude, historial, streaming y consumo' }],
     paths: {
+      ...ia.paths,
       '/api-docs': { get: { summary: 'Abre la documentación interactiva', responses: { 200: { description: 'Interfaz Swagger UI', content: { 'text/html': { schema: { type: 'string' } } } } } } },
     },
     components: {
       schemas: {
+        ...ia.schemas,
         NotaEntrada: {
           type: 'object', required: ['titulo', 'contenido'],
           properties: {
@@ -23,7 +26,7 @@ module.exports = swaggerJsdoc({
         Nota: {
           allOf: [
             { $ref: '#/components/schemas/NotaEntrada' },
-            { type: 'object', required: ['id'], properties: { id: { type: 'integer', minimum: 1 } } },
+            { type: 'object', required: ['id'], properties: { id: { type: 'integer', minimum: 1, maximum: 2147483647 } } },
           ],
         },
         Error: { type: 'object', properties: { error: { type: 'string' } }, required: ['error'] },
@@ -46,7 +49,7 @@ module.exports = swaggerJsdoc({
         },
       },
       parameters: {
-        NotaId: { name: 'id', in: 'path', required: true, schema: { type: 'integer', minimum: 1 }, description: 'Identificador de la nota' },
+        NotaId: { name: 'id', in: 'path', required: true, schema: { type: 'integer', minimum: 1, maximum: 2147483647 }, description: 'Identificador de la nota' },
       },
       responses: {
         DatosInvalidos: {

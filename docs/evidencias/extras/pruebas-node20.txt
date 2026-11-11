@@ -1,0 +1,204 @@
+
+> lab5-notas-api@1.0.0 test
+> node --test lab5-api/test/*.test.js
+
+TAP version 13
+# Subtest: el manejador central conserva AppError y oculta detalles internos
+ok 1 - el manejador central conserva AppError y oculta detalles internos
+  ---
+  duration_ms: 99.663439
+  ...
+# Subtest: Supertest: pregunta registra tokens y costo calculado con tarifas explícitas
+ok 2 - Supertest: pregunta registra tokens y costo calculado con tarifas explícitas
+  ---
+  duration_ms: 162.613043
+  ...
+# Subtest: Supertest: validación antes de Claude en preguntas, turnos y streaming
+ok 3 - Supertest: validación antes de Claude en preguntas, turnos y streaming
+  ---
+  duration_ms: 60.462067
+  ...
+# Subtest: Supertest: envía el historial alternado y lo conserva entre instancias
+ok 4 - Supertest: envía el historial alternado y lo conserva entre instancias
+  ---
+  duration_ms: 62.632281
+  ...
+# Subtest: Supertest: historial aislado, conversación inexistente y límite de diez turnos
+ok 5 - Supertest: historial aislado, conversación inexistente y límite de diez turnos
+  ---
+  duration_ms: 191.509871
+  ...
+# Subtest: Supertest: resumen busca la nota antes de llamar a Claude
+ok 6 - Supertest: resumen busca la nota antes de llamar a Claude
+  ---
+  duration_ms: 39.354393
+  ...
+# Subtest: Supertest: error Claude 400 se traduce a 502 sin filtrar detalles
+ok 7 - Supertest: error Claude 400 se traduce a 502 sin filtrar detalles
+  ---
+  duration_ms: 27.657254
+  ...
+# Subtest: Supertest: error Claude 401 se traduce a 502 sin filtrar detalles
+ok 8 - Supertest: error Claude 401 se traduce a 502 sin filtrar detalles
+  ---
+  duration_ms: 19.854924
+  ...
+# Subtest: Supertest: error Claude 429 se traduce a 429 sin filtrar detalles
+ok 9 - Supertest: error Claude 429 se traduce a 429 sin filtrar detalles
+  ---
+  duration_ms: 19.39805
+  ...
+# Subtest: Supertest: error Claude 529 se traduce a 503 sin filtrar detalles
+ok 10 - Supertest: error Claude 529 se traduce a 503 sin filtrar detalles
+  ---
+  duration_ms: 24.06535
+  ...
+# Subtest: Supertest: límite compartido protege preguntas y resúmenes, sin confiar en X-Forwarded-For
+ok 11 - Supertest: límite compartido protege preguntas y resúmenes, sin confiar en X-Forwarded-For
+  ---
+  duration_ms: 16.605511
+  ...
+# Subtest: Supertest: texto SSE llega antes de terminar el proveedor y persiste al finalizar
+ok 12 - Supertest: texto SSE llega antes de terminar el proveedor y persiste al finalizar
+  ---
+  duration_ms: 16.837649
+  ...
+# Subtest: Supertest: error tras emitir tokens produce evento SSE genérico y no guarda turno parcial
+ok 13 - Supertest: error tras emitir tokens produce evento SSE genérico y no guarda turno parcial
+  ---
+  duration_ms: 20.87482
+  ...
+# Subtest: concurrencia: segundo turno obtiene 409 y un fallo libera la conversación
+ok 14 - concurrencia: segundo turno obtiene 409 y un fallo libera la conversación
+  ---
+  duration_ms: 18.885994
+  ...
+# Subtest: cancelar streaming no persiste un turno incompleto y libera el bloqueo
+ok 15 - cancelar streaming no persiste un turno incompleto y libera el bloqueo
+  ---
+  duration_ms: 17.774903
+  ...
+# Subtest: consumo diario respeta fronteras UTC y no inventa tarifas
+ok 16 - consumo diario respeta fronteras UTC y no inventa tarifas
+  ---
+  duration_ms: 21.421246
+  ...
+# Subtest: SQLite conserva una nota después de desconectar y abrir otro cliente Prisma
+ok 17 - SQLite conserva una nota después de desconectar y abrir otro cliente Prisma
+  ---
+  duration_ms: 10.28208
+  ...
+# Subtest: servicio Claude usa el SDK oficial con historial, system y texto incremental
+ok 18 - servicio Claude usa el SDK oficial con historial, system y texto incremental
+  ---
+  duration_ms: 2.861245
+  ...
+# Subtest: un uso inválido del proveedor revierte mensajes y consumo en la misma transacción
+ok 19 - un uso inválido del proveedor revierte mensajes y consumo en la misma transacción
+  ---
+  duration_ms: 14.198663
+  ...
+# Subtest: sin credencial el servicio falla antes de crear el cliente o contactar al proveedor
+ok 20 - sin credencial el servicio falla antes de crear el cliente o contactar al proveedor
+  ---
+  duration_ms: 2.800305
+  ...
+# Subtest: CRUD: crear dos notas, listar, buscar y eliminar sin reutilizar ids
+ok 21 - CRUD: crear dos notas, listar, buscar y eliminar sin reutilizar ids
+  ---
+  duration_ms: 222.878845
+  ...
+# Subtest: Zod rechaza cuerpos vacíos, tipos incorrectos, blancos y longitudes excesivas
+ok 22 - Zod rechaza cuerpos vacíos, tipos incorrectos, blancos y longitudes excesivas
+  ---
+  duration_ms: 36.628609
+  ...
+# Subtest: ids inexistentes o inválidos responden 404 uniforme
+ok 23 - ids inexistentes o inválidos responden 404 uniforme
+  ---
+  duration_ms: 18.445282
+  ...
+# Subtest: JSON mal formado y rutas desconocidas tienen errores controlados
+ok 24 - JSON mal formado y rutas desconocidas tienen errores controlados
+  ---
+  duration_ms: 2.88521
+  ...
+# Subtest: Swagger UI sirve HTML y documenta las cuatro operaciones de notas
+ok 25 - Swagger UI sirve HTML y documenta las cuatro operaciones de notas
+  ---
+  duration_ms: 250.814353
+  ...
+# Subtest: buscar(id) entrega copias y lanza AppError 404 para la integración con B
+ok 26 - buscar(id) entrega copias y lanza AppError 404 para la integración con B
+  ---
+  duration_ms: 13.511899
+  ...
+# Subtest: no interpreta representaciones ambiguas de id como notas existentes
+ok 27 - no interpreta representaciones ambiguas de id como notas existentes
+  ---
+  duration_ms: 64.613496
+  ...
+# Subtest: crear publica Location y los errores de validación no alteran las notas
+ok 28 - crear publica Location y los errores de validación no alteran las notas
+  ---
+  duration_ms: 50.000751
+  ...
+# Subtest: cuerpo excesivo devuelve 413 sin insertar datos
+ok 29 - cuerpo excesivo devuelve 413 sin insertar datos
+  ---
+  duration_ms: 8.099298
+  ...
+# Subtest: eliminar una nota conserva las demás y listar entrega copias
+ok 30 - eliminar una nota conserva las demás y listar entrega copias
+  ---
+  duration_ms: 20.25177
+  ...
+# Subtest: index arranca desde otro directorio, sirve Swagger y se detiene con SIGTERM
+ok 31 - index arranca desde otro directorio, sirve Swagger y se detiene con SIGTERM
+  ---
+  duration_ms: 1093.414347
+  ...
+# Subtest: index rechaza PORT="abc"
+ok 32 - index rechaza PORT="abc"
+  ---
+  duration_ms: 585.737711
+  ...
+# Subtest: index rechaza PORT="-1"
+ok 33 - index rechaza PORT="-1"
+  ---
+  duration_ms: 426.91227
+  ...
+# Subtest: index rechaza PORT="65536"
+ok 34 - index rechaza PORT="65536"
+  ---
+  duration_ms: 472.589784
+  ...
+# Subtest: index rechaza PORT="3.5"
+ok 35 - index rechaza PORT="3.5"
+  ---
+  duration_ms: 424.768735
+  ...
+# Subtest: index rechaza PORT=""
+ok 36 - index rechaza PORT=""
+  ---
+  duration_ms: 442.575005
+  ...
+# Subtest: puerto ocupado produce salida fallida y error comprensible
+ok 37 - puerto ocupado produce salida fallida y error comprensible
+  ---
+  duration_ms: 845.986829
+  ...
+1..37
+# tests 37
+# suites 0
+# pass 37
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4548.71639
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

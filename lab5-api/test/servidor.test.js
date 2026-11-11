@@ -1,4 +1,7 @@
-const { test } = require('node:test');
+const { test, before, after } = require('node:test');
+const temporary = require('../../scripts/lib/database-temporal')();
+before(() => temporary.ready);
+after(() => temporary.close());
 const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
 const { once } = require('node:events');

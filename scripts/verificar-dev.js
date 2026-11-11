@@ -4,9 +4,11 @@ const { spawn } = require('node:child_process');
 const { randomUUID } = require('node:crypto');
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const temporary = require('./lib/database-temporal')({ migrate: false });
 const { setTimeout: delay } = require('node:timers/promises');
 
 async function main() {
+  await temporary.ready;
   if (process.platform === 'win32') throw new Error('Esta comprobación usa grupos de procesos POSIX. Ejecutar en Linux, macOS o WSL.');
   const root = path.resolve(__dirname, '..');
   const marker = path.join(root, 'lab5-api/src/utils', `verificar-dev-${randomUUID()}.js`);
@@ -37,21 +39,22 @@ async function main() {
     const initial = await waitForStart(1);
     const response = await fetch(`http://127.0.0.1:${initial}/api/notas`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ titulo: 'Prueba de recarga', contenido: 'Se pierde al reiniciar.' }),
+      body: JSON.stringify({ titulo: 'Prueba de recarga', contenido: 'Se conserva al reiniciar.' }),
     });
     assert.equal(response.status, 201);
-    assert.equal((await response.json()).titulo, 'Prueba de recarga');
+    const nota = await response.json();
+    assert.equal(nota.titulo, 'Prueba de recarga');
     await fs.writeFile(marker, '// Archivo temporal para comprobar el observador de nodemon.\n', { flag: 'wx' });
     created = true;
     const restarted = await waitForStart(2);
     assert.match(output, /restarting due to changes/);
     const list = await fetch(`http://127.0.0.1:${restarted}/api/notas`);
     assert.equal(list.status, 200);
-    assert.deepEqual(await list.json(), []);
+    assert.deepEqual(await list.json(), [nota]);
     const docs = await fetch(`http://127.0.0.1:${restarted}/api-docs/`);
     assert.equal(docs.status, 200);
     assert.match(await docs.text(), /Swagger UI/);
-    result = { node: process.version, command: 'npm run dev', initialCreateStatus: 201, restartObserved: true, notesAfterRestart: [], swaggerAfterRestartStatus: 200 };
+    result = { node: process.version, command: 'npm run dev', initialCreateStatus: 201, restartObserved: true, notesAfterRestart: [nota], swaggerAfterRestartStatus: 200 };
   } finally {
     if (child.pid) {
       try { process.kill(-child.pid, 'SIGTERM'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
@@ -62,10 +65,11 @@ async function main() {
       }
     }
     if (created) await fs.unlink(marker);
+    await temporary.close();
   }
   const evidence = path.join(root, 'docs/evidencias/desarrollo.json');
   await fs.mkdir(path.dirname(evidence), { recursive: true });
   await fs.writeFile(evidence, JSON.stringify(result, null, 2) + '\n');
-  console.log('npm run dev: creación 201, recarga automática, memoria reiniciada y Swagger 200. Procesos y archivo temporal cerrados.');
+  console.log('npm run dev: creación 201, recarga automática, persistencia SQLite comprobada y Swagger 200. Procesos y archivo temporal cerrados.');
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });

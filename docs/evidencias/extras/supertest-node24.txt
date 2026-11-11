@@ -1,0 +1,27 @@
+✔ Supertest: pregunta registra tokens y costo calculado con tarifas explícitas (171.615104ms)
+✔ Supertest: validación antes de Claude en preguntas, turnos y streaming (51.292612ms)
+✔ Supertest: envía el historial alternado y lo conserva entre instancias (51.432428ms)
+✔ Supertest: historial aislado, conversación inexistente y límite de diez turnos (123.199215ms)
+✔ Supertest: resumen busca la nota antes de llamar a Claude (20.744363ms)
+✔ Supertest: error Claude 400 se traduce a 502 sin filtrar detalles (17.056226ms)
+✔ Supertest: error Claude 401 se traduce a 502 sin filtrar detalles (17.11243ms)
+✔ Supertest: error Claude 429 se traduce a 429 sin filtrar detalles (16.596788ms)
+✔ Supertest: error Claude 529 se traduce a 503 sin filtrar detalles (13.542768ms)
+✔ Supertest: límite compartido protege preguntas y resúmenes, sin confiar en X-Forwarded-For (23.077038ms)
+✔ Supertest: texto SSE llega antes de terminar el proveedor y persiste al finalizar (23.433193ms)
+✔ Supertest: error tras emitir tokens produce evento SSE genérico y no guarda turno parcial (16.813117ms)
+✔ concurrencia: segundo turno obtiene 409 y un fallo libera la conversación (12.766342ms)
+✔ cancelar streaming no persiste un turno incompleto y libera el bloqueo (15.090764ms)
+✔ consumo diario respeta fronteras UTC y no inventa tarifas (24.990833ms)
+✔ SQLite conserva una nota después de desconectar y abrir otro cliente Prisma (9.375194ms)
+✔ servicio Claude usa el SDK oficial con historial, system y texto incremental (3.038346ms)
+✔ un uso inválido del proveedor revierte mensajes y consumo en la misma transacción (13.570749ms)
+✔ sin credencial el servicio falla antes de crear el cliente o contactar al proveedor (3.124223ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1281.97769

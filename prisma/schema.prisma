@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "client"
+}
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+model Nota {
+  id        Int    @id @default(autoincrement())
+  titulo    String
+  contenido String
+}
+model Conversacion {
+  id       String    @id
+  mensajes Mensaje[]
+}
+model Mensaje {
+  id             Int          @id @default(autoincrement())
+  conversacionId String
+  conversacion   Conversacion @relation(fields: [conversacionId], references: [id], onDelete: Cascade)
+  rol            String
+  contenido      String
+  @@index([conversacionId, id])
+}
+model Consumo {
+  id             Int      @id @default(autoincrement())
+  fecha          DateTime @default(now())
+  modelo         String
+  operacion      String
+  inputTokens    Int
+  outputTokens   Int
+  costoUsd       Float?
+  tarifaEntrada  Float?
+  tarifaSalida   Float?
+  @@index([fecha])
+}

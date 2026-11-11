@@ -3,9 +3,11 @@ const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs/promises');
+const temporary = require('./lib/database-temporal')();
 const app = require('../lab5-api/src/app');
 
 async function main() {
+  await temporary.ready;
   const server = app.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
   let browser;
@@ -63,6 +65,7 @@ async function main() {
   } finally {
     if (browser) await browser.close();
     await new Promise((resolve) => server.close(resolve));
+    await temporary.close();
   }
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });
