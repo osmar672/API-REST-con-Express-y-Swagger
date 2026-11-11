@@ -2,6 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const Anthropic = require('@anthropic-ai/sdk');
+const OpenAI = require('openai');
 const app = require('../src/app');
 const claude = require('../src/services/claude.service');
 const spec = require('../src/config/swagger');
@@ -24,6 +25,49 @@ test('el servicio arma messages.create y extrae texto y tokens', async () => {
   assert.equal(parametros.system, 'Resume en una frase.');
   assert.deepEqual(parametros.messages, [{ role: 'user', content: 'Contenido' }]);
   assert.deepEqual(r, { respuesta: 'Uno\nDos', uso: { input_tokens: 10, output_tokens: 20 } });
+});
+
+test('con Groq arma chat.completions.create y normaliza los tokens', async () => {
+  let parametros;
+  const servicio = claude.crearServicio({
+    chat: {
+      completions: {
+        create: async (p) => {
+          parametros = p;
+          return { choices: [{ message: { content: 'Hola' } }], usage: { prompt_tokens: 7, completion_tokens: 3 } };
+        },
+      },
+    },
+  }, 'groq');
+  const r = await servicio.preguntar('Pregunta', 'Responde breve.');
+  assert.equal(parametros.max_tokens, 1024);
+  assert.equal(parametros.model, process.env.GROQ_MODEL || 'llama-3.3-70b-versatile');
+  assert.deepEqual(parametros.messages, [{ role: 'system', content: 'Responde breve.' }, { role: 'user', content: 'Pregunta' }]);
+  assert.deepEqual(r, { respuesta: 'Hola', uso: { input_tokens: 7, output_tokens: 3 } });
+});
+
+test('errores de Groq: 401 -> 502, 429 -> 429, 503 -> 503, sin detalles', async (t) => {
+  let status;
+  t.mock.method(claude, 'preguntar', async () => {
+    throw OpenAI.APIError.generate(status, { error: { message: 'DETALLE_PRIVADO' } }, 'DETALLE_PRIVADO', new Headers());
+  });
+  t.mock.method(console, 'error', () => {});
+  for (const [original, esperado] of [[401, 502], [400, 502], [429, 429], [503, 503]]) {
+    status = original;
+    await request(app).post('/api/ia/preguntar').send({ pregunta: 'Hola mundo' }).expect(esperado, { error: 'IA_NO_DISPONIBLE' });
+  }
+});
+
+test('con LLM_PROVIDER=groq y sin GROQ_API_KEY la IA devuelve 502', async () => {
+  const anterior = { p: process.env.LLM_PROVIDER, k: process.env.GROQ_API_KEY };
+  process.env.LLM_PROVIDER = 'groq';
+  delete process.env.GROQ_API_KEY;
+  try {
+    await request(app).post('/api/ia/preguntar').send({ pregunta: 'Hola mundo' }).expect(502, { error: 'IA_NO_DISPONIBLE' });
+  } finally {
+    if (anterior.p === undefined) delete process.env.LLM_PROVIDER; else process.env.LLM_PROVIDER = anterior.p;
+    if (anterior.k !== undefined) process.env.GROQ_API_KEY = anterior.k;
+  }
 });
 
 test('POST /api/ia/preguntar valida antes de llamar y devuelve respuesta y uso', async (t) => {
@@ -68,13 +112,16 @@ test('fallo de conexión con el proveedor devuelve 502 sin detalles', async (t) 
 
 test('sin API key funcionan Swagger y notas, y la IA devuelve 502', async () => {
   const anterior = process.env.ANTHROPIC_API_KEY;
+  const proveedor = process.env.LLM_PROVIDER;
   delete process.env.ANTHROPIC_API_KEY;
+  process.env.LLM_PROVIDER = 'claude';
   try {
     await request(app).get('/api-docs/').expect(200);
     await request(app).get('/api/notas').expect(200);
     await request(app).post('/api/ia/preguntar').send({ pregunta: 'Hola mundo' }).expect(502, { error: 'IA_NO_DISPONIBLE' });
   } finally {
     if (anterior !== undefined) process.env.ANTHROPIC_API_KEY = anterior;
+    if (proveedor === undefined) delete process.env.LLM_PROVIDER; else process.env.LLM_PROVIDER = proveedor;
   }
 });
 
